@@ -73,13 +73,16 @@ def main() -> None:
     SELECT
         origin                                      AS airport_code,
         COUNT(*)                                    AS total_flights,
-        AVG(CAST(dep_delay AS DOUBLE))              AS avg_dep_delay,
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CAST(dep_delay AS DOUBLE))
+        AVG(CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
+                                                    AS avg_dep_delay,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
                                                     AS median_dep_delay,
-        {arr_avg}                                   AS avg_arr_delay,
+        {("AVG(CASE WHEN is_cancelled = 0 THEN arr_delay END)" if has_arr else "NULL::DOUBLE")}
+                                                    AS avg_arr_delay,
         SUM(is_cancelled) / COUNT(*)::DOUBLE        AS cancellation_rate,
-        SUM(is_dep_delayed) / COUNT(*)::DOUBLE      AS dep_delay_rate,
-        SUM(CASE WHEN CAST(dep_delay AS DOUBLE) <= 0 THEN 1 ELSE 0 END) / COUNT(*)::DOUBLE
+        SUM(CASE WHEN is_cancelled = 0 THEN is_dep_delayed ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
+                                                    AS dep_delay_rate,
+        SUM(CASE WHEN is_cancelled = 0 AND CAST(dep_delay AS DOUBLE) <= 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
                                                     AS on_time_rate,
         {cd_avg}                                    AS avg_carrier_delay,
         {wd_avg}                                    AS avg_weather_delay,
@@ -90,7 +93,6 @@ def main() -> None:
         {city_col}                                  AS city,
         {state_col}                                 AS state
     FROM read_parquet('{src}')
-    WHERE is_cancelled = 0
     GROUP BY origin
     HAVING COUNT(*) >= 10
     ORDER BY total_flights DESC
@@ -133,14 +135,16 @@ def main() -> None:
         origin,
         dest,
         COUNT(*)                                    AS total_flights,
-        AVG(CAST(dep_delay AS DOUBLE))              AS avg_dep_delay,
-        {arr_avg}                                   AS avg_arr_delay,
+        AVG(CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
+                                                    AS avg_dep_delay,
+        {("AVG(CASE WHEN is_cancelled = 0 THEN arr_delay END)" if has_arr else "NULL::DOUBLE")}
+                                                    AS avg_arr_delay,
         SUM(is_cancelled) / COUNT(*)::DOUBLE        AS cancellation_rate,
-        SUM(is_dep_delayed) / COUNT(*)::DOUBLE      AS dep_delay_rate,
+        SUM(CASE WHEN is_cancelled = 0 THEN is_dep_delayed ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
+                                                    AS dep_delay_rate,
         {dist_col}                                  AS avg_distance,
         COUNT(DISTINCT airline)                     AS num_airlines
     FROM read_parquet('{src}')
-    WHERE is_cancelled = 0
     GROUP BY origin, dest
     HAVING COUNT(*) >= 5
     ORDER BY total_flights DESC
@@ -183,18 +187,20 @@ def main() -> None:
         airline                                     AS airline_code,
         {aname_col}                                 AS airline_full_name,
         COUNT(*)                                    AS total_flights,
-        AVG(CAST(dep_delay AS DOUBLE))              AS avg_dep_delay,
-        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CAST(dep_delay AS DOUBLE))
+        AVG(CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
+                                                    AS avg_dep_delay,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
                                                     AS median_dep_delay,
-        {arr_avg}                                   AS avg_arr_delay,
+        {("AVG(CASE WHEN is_cancelled = 0 THEN arr_delay END)" if has_arr else "NULL::DOUBLE")}
+                                                    AS avg_arr_delay,
         SUM(is_cancelled) / COUNT(*)::DOUBLE        AS cancellation_rate,
-        SUM(is_dep_delayed) / COUNT(*)::DOUBLE      AS dep_delay_rate,
-        SUM(CASE WHEN CAST(dep_delay AS DOUBLE) <= 0 THEN 1 ELSE 0 END) / COUNT(*)::DOUBLE
+        SUM(CASE WHEN is_cancelled = 0 THEN is_dep_delayed ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
+                                                    AS dep_delay_rate,
+        SUM(CASE WHEN is_cancelled = 0 AND CAST(dep_delay AS DOUBLE) <= 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
                                                     AS on_time_rate,
         COUNT(DISTINCT origin)                      AS airports_served,
         COUNT(DISTINCT origin || '-' || dest)       AS routes_served
     FROM read_parquet('{src}')
-    WHERE is_cancelled = 0
     GROUP BY airline
     ORDER BY total_flights DESC
     """
@@ -214,13 +220,15 @@ def main() -> None:
             strftime(TRY_CAST("{date_col}" AS DATE), '%Y-%m')
                                                         AS month,
             COUNT(*)                                    AS total_flights,
-            AVG(CAST(dep_delay AS DOUBLE))              AS avg_dep_delay,
-            {arr_avg}                                   AS avg_arr_delay,
+            AVG(CASE WHEN is_cancelled = 0 THEN CAST(dep_delay AS DOUBLE) END)
+                                                        AS avg_dep_delay,
+            {("AVG(CASE WHEN is_cancelled = 0 THEN arr_delay END)" if has_arr else "NULL::DOUBLE")}
+                                                        AS avg_arr_delay,
             SUM(is_cancelled) / COUNT(*)::DOUBLE        AS cancellation_rate,
-            SUM(is_dep_delayed) / COUNT(*)::DOUBLE      AS dep_delay_rate
+            SUM(CASE WHEN is_cancelled = 0 THEN is_dep_delayed ELSE 0 END) / NULLIF(SUM(CASE WHEN is_cancelled = 0 THEN 1 ELSE 0 END), 0)::DOUBLE
+                                                        AS dep_delay_rate
         FROM read_parquet('{src}')
-        WHERE is_cancelled = 0
-          AND TRY_CAST("{date_col}" AS DATE) IS NOT NULL
+        WHERE TRY_CAST("{date_col}" AS DATE) IS NOT NULL
         GROUP BY month
         ORDER BY month
         """
