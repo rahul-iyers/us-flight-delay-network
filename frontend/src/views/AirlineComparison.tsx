@@ -1,14 +1,11 @@
 /**
  * View 4 — Airline Comparison Panel
- * Bar chart, scatter plot, and summary table comparing all carriers.
  */
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAirlines, fetchTopHubs } from '../api'
 import type { AirlineStat, PropagationHub } from '../types'
-
-// ── Colour palette for airlines (cycle) ─────────────────────────────────────
 
 const PALETTE = [
   '#58a6ff', '#3fb950', '#d29922', '#f78166', '#bc8cff',
@@ -16,21 +13,42 @@ const PALETTE = [
 ]
 const airlineColor = (i: number) => PALETTE[i % PALETTE.length]
 
-// ── Bar chart ────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtDelay(v: number | null | undefined) {
+  return v != null ? v.toFixed(1) + 'm' : '—'
+}
+function fmtPct(v: number | null | undefined) {
+  return v != null ? (v * 100).toFixed(1) + '%' : '—'
+}
+
+// ── Bar chart ─────────────────────────────────────────────────────────────────
+// Uses a wrapper div to get a reliable pixel width, and a ResizeObserver
+// to redraw when the container resizes.
 
 function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof AirlineStat }) {
-  const ref = useRef<SVGSVGElement>(null)
-  useEffect(() => {
-    if (!ref.current || !data.length) return
-    const W = ref.current.clientWidth || 560, H = 280
-    const m = { top: 10, right: 16, bottom: 90, left: 52 }
-    const iW = W - m.left - m.right, iH = H - m.top - m.bottom
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const svgRef  = useRef<SVGSVGElement>(null)
 
-    const svg = d3.select(ref.current).attr('width', W).attr('height', H)
+  const draw = useCallback(() => {
+    if (!svgRef.current || !wrapRef.current || !data.length) return
+
+    const W = wrapRef.current.clientWidth
+    if (!W) return
+    const H = 280
+    const m = { top: 10, right: 16, bottom: 90, left: 52 }
+    const iW = W - m.left - m.right
+    const iH = H - m.top - m.bottom
+
+    // Filter to rows that have a real value for this metric
+    const valid = data.filter(d => d[metric] != null && isFinite(d[metric] as number))
+    if (!valid.length) return
+
+    const svg = d3.select(svgRef.current).attr('width', W).attr('height', H)
     svg.selectAll('*').remove()
     const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`)
 
-    const sorted = [...data].sort((a, b) => (b[metric] as number) - (a[metric] as number))
+    const sorted = [...valid].sort((a, b) => (b[metric] as number) - (a[metric] as number))
 
     const x = d3.scaleBand()
       .domain(sorted.map(d => d.airline_code))
@@ -39,7 +57,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
     const maxVal = d3.max(sorted, d => d[metric] as number) ?? 1
     const y = d3.scaleLinear().domain([0, maxVal]).nice().range([iH, 0])
 
-    // Grid
+    // Grid lines
     g.append('g').selectAll('line')
       .data(y.ticks(5))
       .join('line')
@@ -52,9 +70,9 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
       .data(sorted)
       .join('rect')
       .attr('x', d => x(d.airline_code)!)
-      .attr('y', d => y(d[metric] as number))
+      .attr('y', d => y(Math.max(0, d[metric] as number)))
       .attr('width', x.bandwidth())
-      .attr('height', d => iH - y(d[metric] as number))
+      .attr('height', d => Math.max(0, iH - y(Math.max(0, d[metric] as number))))
       .attr('fill', (_, i) => airlineColor(i))
       .attr('rx', 3)
 
@@ -64,7 +82,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
       .join('text')
       .attr('class', 'val')
       .attr('x', d => x(d.airline_code)! + x.bandwidth() / 2)
-      .attr('y', d => y(d[metric] as number) - 4)
+      .attr('y', d => y(Math.max(0, d[metric] as number)) - 4)
       .attr('text-anchor', 'middle')
       .attr('font-size', 9)
       .attr('fill', '#8b949e')
@@ -73,7 +91,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
         return metric.includes('rate') ? `${(v * 100).toFixed(1)}%` : v.toFixed(1)
       })
 
-    // Axes
+    // X axis
     g.append('g')
       .attr('transform', `translate(0,${iH})`)
       .call(d3.axisBottom(x))
@@ -84,43 +102,64 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
         ax.selectAll('line,path').attr('stroke', '#30363d')
       })
 
+    // Y axis
     g.append('g')
-      .call(d3.axisLeft(y).ticks(5).tickFormat(v => {
-        return metric.includes('rate') ? `${(+v * 100).toFixed(0)}%` : `${v}m`
-      }))
+      .call(d3.axisLeft(y).ticks(5).tickFormat(v =>
+        metric.includes('rate') ? `${(+v * 100).toFixed(0)}%` : `${v}m`
+      ))
       .call(ax => {
         ax.selectAll('text').attr('fill', '#6e7681').attr('font-size', 9)
         ax.selectAll('line,path').attr('stroke', '#30363d')
       })
   }, [data, metric])
 
-  return <svg ref={ref} style={{ width: '100%', height: 280 }} />
+  useEffect(() => { draw() }, [draw])
+
+  useEffect(() => {
+    const obs = new ResizeObserver(draw)
+    if (wrapRef.current) obs.observe(wrapRef.current)
+    return () => obs.disconnect()
+  }, [draw])
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%' }}>
+      <svg ref={svgRef} style={{ display: 'block', width: '100%', height: 280 }} />
+    </div>
+  )
 }
 
-// ── Scatter: on-time rate vs total flights ───────────────────────────────────
+// ── Scatter plot ──────────────────────────────────────────────────────────────
 
 function ScatterPlot({ data }: { data: AirlineStat[] }) {
-  const ref = useRef<SVGSVGElement>(null)
-  useEffect(() => {
-    if (!ref.current || !data.length) return
-    const W = ref.current.clientWidth || 560, H = 260
-    const m = { top: 16, right: 16, bottom: 36, left: 48 }
-    const iW = W - m.left - m.right, iH = H - m.top - m.bottom
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const svgRef  = useRef<SVGSVGElement>(null)
 
-    const svg = d3.select(ref.current).attr('width', W).attr('height', H)
+  const draw = useCallback(() => {
+    if (!svgRef.current || !wrapRef.current || !data.length) return
+
+    const W = wrapRef.current.clientWidth
+    if (!W) return
+    const H = 260
+    const m = { top: 16, right: 16, bottom: 36, left: 52 }
+    const iW = W - m.left - m.right
+    const iH = H - m.top - m.bottom
+
+    // Only use rows with valid on_time_rate
+    const valid = data.filter(d => d.on_time_rate != null && d.total_flights > 0)
+    if (!valid.length) return
+
+    const svg = d3.select(svgRef.current).attr('width', W).attr('height', H)
     svg.selectAll('*').remove()
     const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`)
 
-    const x = d3.scaleLog()
-      .domain(d3.extent(data, d => d.total_flights) as [number, number])
-      .nice()
-      .range([0, iW])
+    const xExtent = d3.extent(valid, d => d.total_flights) as [number, number]
+    const x = d3.scaleLog().domain(xExtent).nice().range([0, iW])
 
-    const maxOnTime = d3.max(data, d => d.on_time_rate) ?? 1
-    const y = d3.scaleLinear().domain([0, maxOnTime]).nice().range([iH, 0])
+    const yMax = d3.max(valid, d => d.on_time_rate) ?? 1
+    const y = d3.scaleLinear().domain([0, yMax]).nice().range([iH, 0])
 
     // Grid
-    g.append('g').selectAll('line.h')
+    g.append('g').selectAll('line')
       .data(y.ticks(5))
       .join('line')
       .attr('x1', 0).attr('x2', iW)
@@ -129,7 +168,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
 
     // Points
     g.selectAll('circle')
-      .data(data)
+      .data(valid)
       .join('circle')
       .attr('cx', d => x(d.total_flights))
       .attr('cy', d => y(d.on_time_rate))
@@ -138,10 +177,10 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
       .attr('opacity', 0.85)
 
     // Labels
-    g.selectAll('text.label')
-      .data(data)
+    g.selectAll('text.lbl')
+      .data(valid)
       .join('text')
-      .attr('class', 'label')
+      .attr('class', 'lbl')
       .attr('x', d => x(d.total_flights) + 9)
       .attr('y', d => y(d.on_time_rate) + 4)
       .attr('font-size', 9)
@@ -164,30 +203,41 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
         ax.selectAll('line,path').attr('stroke', '#30363d')
       })
 
-    // Axis labels
     svg.append('text')
       .attr('x', m.left + iW / 2).attr('y', H - 2)
       .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#6e7681')
       .text('Total Flights (log scale)')
 
     svg.append('text')
-      .attr('transform', `rotate(-90)`)
-      .attr('x', -(m.top + iH / 2)).attr('y', 12)
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -(m.top + iH / 2)).attr('y', 14)
       .attr('text-anchor', 'middle').attr('font-size', 10).attr('fill', '#6e7681')
       .text('On-Time Rate')
   }, [data])
 
-  return <svg ref={ref} style={{ width: '100%', height: 260 }} />
+  useEffect(() => { draw() }, [draw])
+
+  useEffect(() => {
+    const obs = new ResizeObserver(draw)
+    if (wrapRef.current) obs.observe(wrapRef.current)
+    return () => obs.disconnect()
+  }, [draw])
+
+  return (
+    <div ref={wrapRef} style={{ width: '100%' }}>
+      <svg ref={svgRef} style={{ display: 'block', width: '100%', height: 260 }} />
+    </div>
+  )
 }
 
-// ── Top propagation hubs table ───────────────────────────────────────────────
+// ── Propagation hubs table ────────────────────────────────────────────────────
 
 function PropHubsTable({ data }: { data: PropagationHub[] }) {
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
       <thead>
         <tr style={{ borderBottom: '1px solid #30363d', color: '#6e7681', fontSize: 11 }}>
-          <th style={{ textAlign: 'left', padding: '5px 8px' }}>Hub</th>
+          <th style={{ textAlign: 'left',  padding: '5px 8px' }}>Hub</th>
           <th style={{ textAlign: 'right', padding: '5px 8px' }}>Propagations</th>
           <th style={{ textAlign: 'right', padding: '5px 8px' }}>Dest. affected</th>
           <th style={{ textAlign: 'right', padding: '5px 8px' }}>Avg delay out</th>
@@ -199,7 +249,7 @@ function PropHubsTable({ data }: { data: PropagationHub[] }) {
             <td style={{ padding: '5px 8px', color: '#58a6ff', fontWeight: 600 }}>{h.hub_airport}</td>
             <td style={{ padding: '5px 8px', textAlign: 'right', color: '#f78166' }}>{h.total_propagations.toLocaleString()}</td>
             <td style={{ padding: '5px 8px', textAlign: 'right', color: '#c9d1d9' }}>{h.unique_destinations}</td>
-            <td style={{ padding: '5px 8px', textAlign: 'right', color: '#d29922' }}>{h.avg_outbound_delay?.toFixed(1)} min</td>
+            <td style={{ padding: '5px 8px', textAlign: 'right', color: '#d29922' }}>{fmtDelay(h.avg_outbound_delay)}</td>
           </tr>
         ))}
       </tbody>
@@ -207,15 +257,16 @@ function PropHubsTable({ data }: { data: PropagationHub[] }) {
   )
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 
-type Metric = 'avg_dep_delay' | 'avg_arr_delay' | 'cancellation_rate' | 'on_time_rate'
+// Only show metrics that have real data (no arr_delay in this dataset)
+type Metric = 'avg_dep_delay' | 'cancellation_rate' | 'on_time_rate' | 'dep_delay_rate'
 
 const METRICS: { key: Metric; label: string }[] = [
-  { key: 'avg_dep_delay',      label: 'Avg Dep Delay' },
-  { key: 'avg_arr_delay',      label: 'Avg Arr Delay' },
-  { key: 'cancellation_rate',  label: 'Cancellation Rate' },
-  { key: 'on_time_rate',       label: 'On-Time Rate' },
+  { key: 'avg_dep_delay',     label: 'Avg Dep Delay' },
+  { key: 'on_time_rate',      label: 'On-Time Rate' },
+  { key: 'cancellation_rate', label: 'Cancellation Rate' },
+  { key: 'dep_delay_rate',    label: '% Flights Delayed' },
 ]
 
 const card: React.CSSProperties = {
@@ -284,7 +335,7 @@ export default function AirlineComparison() {
           On-Time Rate vs. Flight Volume
         </div>
         <div style={{ fontSize: 11, color: '#6e7681', marginBottom: 8 }}>
-          Larger airlines are not necessarily less punctual — but see which carriers punch above their weight.
+          Larger airlines are not necessarily less punctual.
         </div>
         <ScatterPlot data={airlines} />
       </div>
@@ -298,7 +349,7 @@ export default function AirlineComparison() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #30363d', color: '#6e7681' }}>
-                {['Code', 'Name', 'Flights', 'Avg Dep', 'Avg Arr', 'On-Time', 'Cancel', 'Airports', 'Routes'].map(h => (
+                {['Code', 'Name', 'Flights', 'Avg Dep', 'On-Time', 'Cancel', '% Delayed', 'Airports', 'Routes'].map(h => (
                   <th key={h} style={{ padding: '5px 8px', textAlign: h === 'Code' || h === 'Name' ? 'left' : 'right' }}>{h}</th>
                 ))}
               </tr>
@@ -307,18 +358,18 @@ export default function AirlineComparison() {
               {[...airlines]
                 .sort((a, b) => b.total_flights - a.total_flights)
                 .map((a, i) => (
-                <tr key={a.airline_code} style={{ borderBottom: '1px solid #21262d', background: i % 2 === 0 ? 'transparent' : '#161b2244' }}>
-                  <td style={{ padding: '5px 8px', color: '#58a6ff', fontWeight: 600 }}>{a.airline_code}</td>
-                  <td style={{ padding: '5px 8px', color: '#c9d1d9' }}>{a.airline_name}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.total_flights.toLocaleString()}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right', color: a.avg_dep_delay > 15 ? '#f78166' : '#3fb950' }}>{a.avg_dep_delay.toFixed(1)}m</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right', color: a.avg_arr_delay > 15 ? '#f78166' : '#3fb950' }}>{a.avg_arr_delay.toFixed(1)}m</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{(a.on_time_rate * 100).toFixed(1)}%</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{(a.cancellation_rate * 100).toFixed(1)}%</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.airports_served}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.routes_served}</td>
-                </tr>
-              ))}
+                  <tr key={a.airline_code} style={{ borderBottom: '1px solid #21262d', background: i % 2 === 0 ? 'transparent' : '#161b2244' }}>
+                    <td style={{ padding: '5px 8px', color: '#58a6ff', fontWeight: 600 }}>{a.airline_code}</td>
+                    <td style={{ padding: '5px 8px', color: '#c9d1d9' }}>{a.airline_name}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.total_flights.toLocaleString()}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right', color: (a.avg_dep_delay ?? 0) > 15 ? '#f78166' : '#3fb950' }}>{fmtDelay(a.avg_dep_delay)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtPct(a.on_time_rate)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtPct(a.cancellation_rate)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtPct(a.dep_delay_rate)}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.airports_served}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{a.routes_served}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -331,7 +382,7 @@ export default function AirlineComparison() {
             Top Delay Propagation Hubs
           </div>
           <div style={{ fontSize: 11, color: '#6e7681', marginBottom: 10 }}>
-            Airports that most often propagate delays to downstream routes (tail-number chaining).
+            Airports that most often propagate delays to downstream routes.
           </div>
           <PropHubsTable data={hubs} />
         </div>
