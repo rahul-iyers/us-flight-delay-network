@@ -11,7 +11,7 @@ from functools import lru_cache
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from config import AIRPORT_STATS, HOURLY_DELAYS
+from config import AIRPORT_STATS, HOURLY_DELAYS, NETWORK_NODES
 from utils import df_to_json_records
 
 router = APIRouter()
@@ -21,7 +21,12 @@ router = APIRouter()
 def _load_airports() -> pd.DataFrame:
     if not AIRPORT_STATS.exists():
         raise FileNotFoundError(f"airport_stats.parquet not found at {AIRPORT_STATS}. Run the pipeline first.")
-    return pd.read_parquet(AIRPORT_STATS)
+    df = pd.read_parquet(AIRPORT_STATS)
+    if NETWORK_NODES.exists():
+        centrality_cols = ["airport_code", "community_id", "degree_centrality", "betweenness_centrality", "pagerank"]
+        nn = pd.read_parquet(NETWORK_NODES, columns=centrality_cols)
+        df = df.merge(nn, on="airport_code", how="left")
+    return df
 
 
 @lru_cache(maxsize=1)

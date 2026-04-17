@@ -227,25 +227,27 @@ export default function AirportDetail({ code, onBack }: Props) {
         ))}
       </div>
 
-      {/* Delay breakdown */}
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: '#c9d1d9' }}>
-          Delay Breakdown (avg minutes)
+      {/* Delay breakdown — only shown when source data includes delay-cause columns */}
+      {[airport.avg_carrier_delay, airport.avg_weather_delay, airport.avg_nas_delay, airport.avg_late_aircraft_delay].some(v => v != null) && (
+        <div style={card}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: '#c9d1d9' }}>
+            Delay Breakdown (avg minutes)
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Carrier',       val: airport.avg_carrier_delay },
+              { label: 'Weather',       val: airport.avg_weather_delay },
+              { label: 'NAS / ATC',     val: airport.avg_nas_delay },
+              { label: 'Late Aircraft', val: airport.avg_late_aircraft_delay },
+            ].map(({ label: l, val: v }) => (
+              <div key={l} style={{ ...statBox, flex: '1 1 80px' }}>
+                <div style={label}>{l}</div>
+                <div style={{ ...value, fontSize: 16 }}>{min(v)}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {[
-            { label: 'Carrier',       val: airport.avg_carrier_delay },
-            { label: 'Weather',       val: airport.avg_weather_delay },
-            { label: 'NAS / ATC',     val: airport.avg_nas_delay },
-            { label: 'Late Aircraft', val: airport.avg_late_aircraft_delay },
-          ].map(({ label: l, val: v }) => (
-            <div key={l} style={{ ...statBox, flex: '1 1 80px' }}>
-              <div style={label}>{l}</div>
-              <div style={{ ...value, fontSize: 16 }}>{min(v)}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Network metrics */}
       <div style={card}>
