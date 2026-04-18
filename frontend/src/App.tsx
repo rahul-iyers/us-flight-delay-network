@@ -5,6 +5,7 @@ import NetworkMap from './views/NetworkMap'
 import AirportDetail from './views/AirportDetail'
 import Timeline from './views/Timeline'
 import AirlineComparison from './views/AirlineComparison'
+import PropagationView from './views/PropagationView'
 
 const STYLES: Record<string, React.CSSProperties> = {
   shell: {
@@ -64,6 +65,9 @@ export default function App() {
         )}
         {state.activeView === 'airlines' && (
           <AirlineComparison />
+        )}
+        {state.activeView === 'propagation' && (
+          <PropagationView />
         )}
         {state.activeView === 'airport' && !state.selectedAirport && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8b949e' }}>

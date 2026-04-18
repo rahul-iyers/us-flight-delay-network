@@ -5,7 +5,7 @@
 import type {
   AirportNode, AirportStats, HourlyDelay,
   RouteEdge, GraphPayload,
-  PropagationSummary, AirportPropagation, PropagationHub,
+  PropagationSummary, AirportPropagation, PropagationHub, PropagationTreeData,
   AirlineStat, MonthlyTrend,
 } from './types'
 
@@ -59,6 +59,13 @@ export const fetchAirportPropagation = (code: string) =>
 
 export const fetchTopHubs = (limit = 20) =>
   get<PropagationHub[]>('/propagation/top-hubs', { limit })
+
+export const fetchPropagationTree = (params: {
+  airport: string
+  hops?: number
+  min_count?: number
+  max_per_node?: number
+}) => get<PropagationTreeData>('/propagation/tree', params as Record<string, string | number>)
 
 // ─── Airlines ────────────────────────────────────────────────────────────────
 

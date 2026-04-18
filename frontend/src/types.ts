@@ -116,9 +116,33 @@ export interface MonthlyTrend {
   dep_delay_rate: number
 }
 
+// ─── Propagation Tree ────────────────────────────────────────────────────────
+
+export interface PropagationTreeNode {
+  id: string
+  parent: string | null
+  airport: string
+  hop: number
+  avg_delay: number
+  propagation_count: number
+  avg_inbound_delay: number
+  avg_turnaround: number
+  airlines_affected: number
+  city: string
+  state: string
+  lat: number | null
+  lon: number | null
+}
+
+export interface PropagationTreeData {
+  root: string
+  node_count: number
+  nodes: PropagationTreeNode[]
+}
+
 // ─── UI state ────────────────────────────────────────────────────────────────
 
-export type ViewName = 'map' | 'airport' | 'timeline' | 'airlines'
+export type ViewName = 'map' | 'airport' | 'timeline' | 'airlines' | 'propagation'
 
 export interface AppState {
   activeView: ViewName
