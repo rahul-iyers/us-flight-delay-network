@@ -231,7 +231,7 @@ function Tooltip({ state }: { state: TooltipState }) {
         </div>
       )}
       <div style={{ marginTop: 8, fontSize: 10, color: '#58a6ff' }}>
-        {node.hop === 0 ? 'Hover nodes to explore · scroll to zoom' : 'Click to re-root here'}
+        {node.hop === 0 ? 'Hover nodes to explore : scroll to zoom' : 'Click to re-root here'}
       </div>
     </div>
   )
@@ -250,8 +250,8 @@ function Legend() {
       </div>
       {([
         ['#2ea043', '≤ 5 min'],
-        ['#d29922', '5–15 min'],
-        ['#f78166', '15–30 min'],
+        ['#d29922', '5-15 min'],
+        ['#f78166', '15-30 min'],
         ['#da3633', '> 30 min'],
       ] as [string, string][]).map(([c, l]) => (
         <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -320,7 +320,7 @@ function HourlyStrip({ data, airport }: { data: HourlyDelay[]; airport: string }
   return (
     <div style={{ borderTop: '1px solid #21262d', background: '#0d1117', padding: '4px 8px 2px' }}>
       <div style={{ fontSize: 10, color: '#484f58', marginBottom: 1 }}>
-        {airport} · avg departure delay by hour of day
+        {airport} : avg departure delay by hour of day
       </div>
       <svg ref={ref} style={{ width: '100%', height: 52 }} />
     </div>
@@ -341,11 +341,11 @@ const chipSt: React.CSSProperties = {
 // main comp
 
 export default function PropagationView() {
-  const [rootAirport, setRootAirport]   = useState('ATL')
-  const [inputText,   setInputText]     = useState('ATL')
-  const [hops,        setHops]          = useState(3)
-  const [minCount,    setMinCount]      = useState(200)
-  const [tooltip,     setTooltip]       = useState<TooltipState | null>(null)
+  const [rootAirport, setRootAirport] = useState('ATL')
+  const [inputText, setInputText] = useState('ATL')
+  const [hops, setHops] = useState(3)
+  const [minCount, setMinCount] = useState(200)
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -491,7 +491,7 @@ export default function PropagationView() {
             </div>
           )}
           <div style={{ marginLeft: 'auto', fontSize: 11, color: '#484f58' }}>
-            Scroll to zoom · drag to pan · click node to re-root
+            Scroll to zoom : drag to pan : click node to re-root
           </div>
         </div>
 
@@ -499,7 +499,7 @@ export default function PropagationView() {
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {isLoading && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6e7681', fontSize: 13 }}>
-              Building propagation tree…
+              Building propagation tree...
             </div>
           )}
           {isError && (

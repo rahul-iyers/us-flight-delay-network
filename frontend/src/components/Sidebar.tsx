@@ -12,11 +12,11 @@ interface Props {
   onHourChange: (h: [number, number]) => void
 }
 
-const NAV: { id: ViewName; label: string; icon: string }[] = [
-  { id: 'map',         label: 'Network Map',        icon: '🗺' },
-  { id: 'airport',     label: 'Airport Detail',      icon: '✈' },
-  { id: 'propagation', label: 'Delay Propagation',   icon: '🔗' },
-{ id: 'airlines',    label: 'Airline Comparison',  icon: '📊' },
+const NAV: { id: ViewName; label: string; }[] = [
+  { id: 'map', label: 'Network Map' },
+  { id: 'airport', label: 'Airport Detail' },
+  { id: 'propagation', label: 'Delay Propagation' },
+  { id: 'airlines', label: 'Airline Comparison' },
 ]
 
 const s = {
@@ -132,13 +132,12 @@ export default function Sidebar({
       <div style={s.title}>Flight Delay<br />Network</div>
 
       <div style={s.nav}>
-        {NAV.map(({ id, label, icon }) => (
+        {NAV.map(({ id, label }) => (
           <div
             key={id}
             style={s.navItem(activeView === id)}
             onClick={() => onViewChange(id)}
           >
-            <span>{icon}</span>
             <span>{label}</span>
           </div>
         ))}
@@ -149,7 +148,7 @@ export default function Sidebar({
         <div style={s.section}>
           <div style={s.sectionTitle}>Selected Airport</div>
           <div style={s.airportBadge} onClick={onClearAirport} title="Click to clear">
-            ✈ {selectedAirport}  ✕
+            {selectedAirport}
           </div>
         </div>
       )}
@@ -193,8 +192,8 @@ export default function Sidebar({
         <div style={s.sectionTitle}>Delay Legend</div>
         {[
           ['#2ea043', '< 5 min'],
-          ['#d29922', '5–15 min'],
-          ['#f78166', '15–30 min'],
+          ['#d29922', '5-15 min'],
+          ['#f78166', '15-30 min'],
           ['#da3633', '> 30 min'],
         ].map(([color, label]) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>

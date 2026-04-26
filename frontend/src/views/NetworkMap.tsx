@@ -212,15 +212,15 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
           x: event.clientX - rect.left + 14,
           y: event.clientY - rect.top - 10,
           html: [
-            `<strong>${d.n.id ?? d.n.airport_code}</strong> — ${d.n.city ?? ''}, ${d.n.state ?? ''}`,
+            `<strong>${d.n.id ?? d.n.airport_code}</strong> - ${d.n.city ?? ''}, ${d.n.state ?? ''}`,
             d.n.full_name ? `<span style="color:#6e7681">${d.n.full_name}</span>` : '',
             `<hr style="border:none;border-top:1px solid #30363d;margin:4px 0"/>`,
             `Flights: ${(d.n.total_flights ?? 0).toLocaleString()}`,
             isFiltered
-              ? `Delay ${filterHour[0]}h–${filterHour[1]}h: <b style="color:${delayColor(filteredDelay)}">${filteredDelay.toFixed(1)} min</b>`
+              ? `Delay ${filterHour[0]}h-${filterHour[1]}h: <b style="color:${delayColor(filteredDelay)}">${filteredDelay.toFixed(1)} min</b>`
               : `Avg dep delay: <b style="color:${delayColor(filteredDelay)}">${filteredDelay.toFixed(1)} min</b>`,
             `On-time: ${((d.n.on_time_rate ?? 0) * 100).toFixed(1)}%`,
-            `Destinations: ${d.n.num_destinations ?? '—'}`,
+            `Destinations: ${d.n.num_destinations ?? '-'}`,
             `Community: ${d.n.community_id ?? 'N/A'}`,
           ].filter(Boolean).join('<br/>'),
         })
@@ -276,7 +276,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
           justifyContent: 'center', color: '#8b949e', fontSize: 14, flexDirection: 'column', gap: 8,
         }}>
           <div style={{ fontSize: 24 }}>✈</div>
-          <div>{graphLoading ? 'Loading flight data…' : 'Loading basemap…'}</div>
+          <div>{graphLoading ? 'Loading flight data...' : 'Loading basemap...'}</div>
         </div>
       )}
       <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%' }} />
@@ -289,7 +289,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
           borderRadius: 6, padding: '5px 10px', fontSize: 11, color: '#58a6ff',
           pointerEvents: 'none',
         }}>
-          Showing delays: {String(filterHour[0]).padStart(2,'0')}:00 – {String(filterHour[1]).padStart(2,'0')}:59
+          Showing delays: {String(filterHour[0]).padStart(2,'0')}:00 - {String(filterHour[1]).padStart(2,'0')}:59
         </div>
       )}
 
@@ -303,7 +303,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
         position: 'absolute', bottom: 10, right: 14, fontSize: 10,
         color: '#484f58', pointerEvents: 'none',
       }}>
-        Scroll to zoom · Drag to pan · Click airport for detail
+        Scroll to zoom : Drag to pan : Click airport for detail
       </div>
     </div>
   )

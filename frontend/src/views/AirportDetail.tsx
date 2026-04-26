@@ -212,11 +212,11 @@ export default function AirportDetail({ code, onBack }: Props) {
       <div style={statRow}>
         {[
           { label: 'Total Flights', val: fmt(airport.total_flights) },
-          { label: 'On-Time Rate',  val: pct(airport.on_time_rate) },
-          { label: 'Cancel Rate',   val: pct(airport.cancellation_rate) },
-          { label: 'Destinations',  val: fmt(airport.num_destinations) },
-          { label: 'Airlines',      val: fmt(airport.num_airlines) },
-          { label: 'Community',     val: String(airport.community_id ?? '—') },
+          { label: 'On-Time Rate', val: pct(airport.on_time_rate) },
+          { label: 'Cancel Rate', val: pct(airport.cancellation_rate) },
+          { label: 'Destinations', val: fmt(airport.num_destinations) },
+          { label: 'Airlines', val: fmt(airport.num_airlines) },
+          { label: 'Community', val: String(airport.community_id ?? '-') },
         ].map(({ label: l, val: v }) => (
           <div key={l} style={statBox}>
             <div style={label}>{l}</div>
@@ -233,9 +233,9 @@ export default function AirportDetail({ code, onBack }: Props) {
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {[
-              { label: 'Carrier',       val: airport.avg_carrier_delay },
-              { label: 'Weather',       val: airport.avg_weather_delay },
-              { label: 'NAS / ATC',     val: airport.avg_nas_delay },
+              { label: 'Carrier', val: airport.avg_carrier_delay },
+              { label: 'Weather', val: airport.avg_weather_delay },
+              { label: 'NAS / ATC', val: airport.avg_nas_delay },
               { label: 'Late Aircraft', val: airport.avg_late_aircraft_delay },
             ].map(({ label: l, val: v }) => (
               <div key={l} style={{ ...statBox, flex: '1 1 80px' }}>
@@ -254,9 +254,9 @@ export default function AirportDetail({ code, onBack }: Props) {
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {[
-            { label: 'Degree',       val: airport.degree_centrality?.toFixed(3) ?? '—' },
-            { label: 'Betweenness',  val: airport.betweenness_centrality?.toFixed(4) ?? '—' },
-            { label: 'PageRank',     val: airport.pagerank?.toFixed(5) ?? '—' },
+            { label: 'Degree', val: airport.degree_centrality?.toFixed(3) ?? '-' },
+            { label: 'Betweenness', val: airport.betweenness_centrality?.toFixed(4) ?? '-' },
+            { label: 'PageRank', val: airport.pagerank?.toFixed(5) ?? '-' },
           ].map(({ label: l, val: v }) => (
             <div key={l} style={{ ...statBox, flex: '1 1 100px' }}>
               <div style={label}>{l}</div>
@@ -273,7 +273,7 @@ export default function AirportDetail({ code, onBack }: Props) {
             Delay by Hour of Day
           </div>
           <div style={{ fontSize: 11, color: '#6e7681', marginBottom: 8 }}>
-            Bars = avg departure delay · Blue band = IQR
+            Bars = avg departure delay : Blue band = IQR
           </div>
           <HourlyChart data={hourly} />
         </div>

@@ -16,10 +16,10 @@ const airlineColor = (i: number) => PALETTE[i % PALETTE.length]
 // helpers for formatting
 
 function fmtDelay(v: number | null | undefined) {
-  return v != null ? v.toFixed(1) + 'm' : '—'
+  return v != null ? v.toFixed(1) + 'm' : '-'
 }
 function fmtPct(v: number | null | undefined) {
-  return v != null ? (v * 100).toFixed(1) + '%' : '—'
+  return v != null ? (v * 100).toFixed(1) + '%' : '-'
 }
 
 // bar chart
@@ -252,14 +252,13 @@ function PropHubsTable({ data }: { data: PropagationHub[] }) {
 
 // main funcs
 
-// only show metrics that have real data (no arr_delay in this dataset)
 type Metric = 'avg_dep_delay' | 'cancellation_rate' | 'on_time_rate' | 'dep_delay_rate'
 
 const METRICS: { key: Metric; label: string }[] = [
-  { key: 'avg_dep_delay',     label: 'Avg Dep Delay' },
-  { key: 'on_time_rate',      label: 'On-Time Rate' },
+  { key: 'avg_dep_delay', label: 'Avg Dep Delay' },
+  { key: 'on_time_rate', label: 'On-Time Rate' },
   { key: 'cancellation_rate', label: 'Cancellation Rate' },
-  { key: 'dep_delay_rate',    label: '% Flights Delayed' },
+  { key: 'dep_delay_rate', label: '% Flights Delayed' },
 ]
 
 const card: React.CSSProperties = {
@@ -283,7 +282,7 @@ export default function AirlineComparison() {
   if (!airlines) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8b949e' }}>
-        Loading airline data…
+        Loading airline data...
       </div>
     )
   }
@@ -336,7 +335,7 @@ export default function AirlineComparison() {
       {/* summary table */}
       <div style={card}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#c9d1d9', marginBottom: 10 }}>
-          All Airlines — Summary Stats
+          All Airlines - Summary Stats
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
