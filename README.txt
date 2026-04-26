@@ -7,8 +7,11 @@ Sam Sukendro
 Shaunak Warty
 
 
-An interactive visualization of delay patterns and propagation across the U.S.
-flight network using 26 million flight records from 2022–2025.
+We have built an interactive visualization of delay patterns and propagation across the U.S. domestic flight network using 26 million flight records from 2022–2025. First, we process the dataset into multiple optimized artifacts, each with a unique view and use case through our Python pipeline. Then, we expose these analytics through a Python backend API, which is used by our React-based frontend to render beautiful interactive visualizations. The goal is to make delay propagation, airline and airport statistics, and route relationships easy to understand and connect for the user.
+
+Our project is organized into three main folders. The pipeline folder contains the data preparation steps: cleaning the raw data, aggregating statistics, building the route network graph, and calculating delay propagation. The backend folder contains the FastAPI-powered backend which loads the processed files and serves endpoints for airports, airlines, propagation details, and more. The frontend folder contains our React application which reads the backend API and renders the visualizations. It contains multiple views for the network map, airport details, and propagation overview.
+
+To utilize this package, follow the instructions below to install the prerequisites, set up your environment, and run the code. You will first run the pipeline to process the data, then run the backend and frontend in separate terminal windows to launch our full application.
 
 
 ============================================================
@@ -29,6 +32,11 @@ Versions used:
 Download the flight dataset CSV and place it in:
 
 data/raw/flight_data.csv
+
+You can find the data file here:
+https://drive.google.com/file/d/1e2FNSqbWgsuPrT83FlHJOwGYLCievhrQ/view?usp=drive_link
+
+Make sure that the file is named flight_data.csv, otherwise the pipeline will fail.
 
 
 3. SET UP THE PYTHON ENVIRONMENT
@@ -112,17 +120,3 @@ Per-airport stats, hourly delay bar chart, delay cause breakdown, propagation su
 
 3. AIRLINE COMPARISON
 Bar chart, scatter plot, and summary table comparing all carriers.
-
-
-============================================================
-SIDEBAR CONTROLS
-============================================================
-
-- Departure Hour Slider
-  Filters node colors to show average delay only for selected hours.
-
-- Show Propagation
-  Displays dashed orange lines showing routes that frequently propagate delays.
-
-- Click an Airport
-  Opens Airport Detail view for the selected airport.
