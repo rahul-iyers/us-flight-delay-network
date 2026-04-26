@@ -1,7 +1,5 @@
 /**
- * View 5 — Delay Propagation Tree
- * Interactive radial tree showing how delays cascade through the network hop-by-hop.
- * Root = selected hub airport. Each ring = one additional hop.
+ delay propagation tree
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
@@ -9,11 +7,11 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchPropagationTree, fetchAirportHourly } from '../api'
 import type { HourlyDelay, PropagationTreeData, PropagationTreeNode } from '../types'
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// constants
 
 const POPULAR = ['ATL', 'ORD', 'DFW', 'DEN', 'LAX', 'CLT', 'LAS', 'PHX', 'MCO', 'SEA', 'JFK', 'SFO']
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// helpers
 
 function delayColor(avg: number): string {
   if (avg <= 0)  return '#2ea043'
@@ -33,7 +31,7 @@ function fmtCount(n: number): string {
   return String(n)
 }
 
-// ── D3 radial tree drawing ────────────────────────────────────────────────────
+// d3 radial tree drawing
 
 interface DrawCallbacks {
   onNodeClick: (airport: string) => void
@@ -50,7 +48,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
   const svg = d3.select(svgEl)
   svg.selectAll('*').remove()
 
-  // ── Zoom / pan ──────────────────────────────────────────────────────────────
+  // zoom/panning functionality
   const g = svg.append('g')
   const zoom = d3.zoom<SVGSVGElement, unknown>()
     .scaleExtent([0.2, 5])
@@ -58,7 +56,6 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
   svg.call(zoom)
   svg.call(zoom.transform, d3.zoomIdentity.translate(cx, cy))
 
-  // ── Build D3 hierarchy ──────────────────────────────────────────────────────
   let root: d3.HierarchyNode<PropagationTreeNode>
   try {
     const stratify = d3.stratify<PropagationTreeNode>()
@@ -69,19 +66,19 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     return
   }
 
-  // ── Radial tree layout ──────────────────────────────────────────────────────
+  // radial tree
   const treeLayout = d3.tree<PropagationTreeNode>()
     .size([2 * Math.PI, radius])
     .separation((a, b) => (a.parent === b.parent ? 1 : 2) / Math.max(1, a.depth))
 
   const computed = treeLayout(root)
 
-  // ── Scales ──────────────────────────────────────────────────────────────────
+  // scales
   const counts = data.nodes.filter(n => n.hop > 0).map(n => n.propagation_count)
   const maxCount = d3.max(counts) ?? 1
   const sizeScale = d3.scaleSqrt().domain([0, maxCount]).range([4, 20])
 
-  // ── Concentric ring guides ───────────────────────────────────────────────────
+  // concentric rings
   const maxHop = d3.max(data.nodes, d => d.hop) ?? 0
   for (let h = 1; h <= maxHop; h++) {
     const r = (radius * h) / maxHop
@@ -93,7 +90,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
       .attr('opacity', 0.5)
   }
 
-  // ── Links ───────────────────────────────────────────────────────────────────
+  // links
   const hopOpacity = [0, 0.75, 0.50, 0.30, 0.18]
 
   const linkGen = d3.linkRadial<
@@ -121,7 +118,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     .duration(450)
     .attr('opacity', 1)
 
-  // ── Nodes ───────────────────────────────────────────────────────────────────
+  // nodes
   const nodeG = g.selectAll<SVGGElement, d3.HierarchyPointNode<PropagationTreeNode>>('.node')
     .data(computed.descendants())
     .join('g')
@@ -135,7 +132,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     .on('mousemove', (e, d) => cb.onHover({ x: e.clientX, y: e.clientY, node: d.data }))
     .on('mouseout', () => cb.onHover(null))
 
-  // Circle
+  // circle
   nodeG.append('circle')
     .attr('r', d => d.data.hop === 0 ? 22 : sizeScale(d.data.propagation_count))
     .attr('fill', d => d.data.hop === 0 ? '#1f6feb' : delayColor(d.data.avg_delay))
@@ -147,7 +144,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     .duration(400)
     .attr('opacity', 1)
 
-  // Airport code label
+  //airport code label
   nodeG.append('text')
     .attr('dy', '0.32em')
     .attr('x', d => {
@@ -170,7 +167,6 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     .duration(300)
     .attr('opacity', 1)
 
-  // Propagation count badge on hop-1 nodes
   nodeG.filter(d => d.data.hop === 1)
     .append('text')
     .attr('dy', d => -(sizeScale(d.data.propagation_count) + 6))
@@ -186,7 +182,7 @@ function drawTree(svgEl: SVGSVGElement, data: PropagationTreeData, cb: DrawCallb
     .attr('opacity', 1)
 }
 
-// ── Subcomponents ─────────────────────────────────────────────────────────────
+//subcomponents
 
 interface TooltipState { x: number; y: number; node: PropagationTreeNode }
 
@@ -331,7 +327,7 @@ function HourlyStrip({ data, airport }: { data: HourlyDelay[]; airport: string }
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// styles
 
 const labelSt: React.CSSProperties = {
   fontSize: 10, fontWeight: 600, color: '#6e7681',
@@ -346,7 +342,7 @@ const chipSt: React.CSSProperties = {
   border: '1px solid', fontFamily: 'monospace', letterSpacing: '0.04em',
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// main comp
 
 export default function PropagationView() {
   const [rootAirport, setRootAirport]   = useState('ATL')
@@ -415,7 +411,7 @@ export default function PropagationView() {
   return (
     <div style={{ display: 'flex', height: '100%', background: '#0d1117', overflow: 'hidden' }}>
 
-      {/* ── Left panel ─────────────────────────────────────────────────────── */}
+      {/* left panel */}
       <div style={{
         width: 196, flexShrink: 0, background: '#161b22', borderRight: '1px solid #30363d',
         display: 'flex', flexDirection: 'column', padding: 14, gap: 14, overflow: 'auto',
@@ -524,7 +520,7 @@ export default function PropagationView() {
         )}
       </div>
 
-      {/* ── Main area ───────────────────────────────────────────────────────── */}
+      {/* main area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
 
         {/* Header */}

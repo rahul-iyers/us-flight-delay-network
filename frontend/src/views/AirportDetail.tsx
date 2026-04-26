@@ -1,7 +1,5 @@
 /**
- * View 2 — Airport Detail Panel
- * Shows stats, hourly delay bar chart, top routes, and propagation breakdown
- * for a selected airport.
+ airport detail panel
  */
 import React, { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
@@ -14,7 +12,7 @@ interface Props {
   onBack: () => void
 }
 
-// ── Colour helpers ─────────────────────────────────────────────────────────
+//colors
 
 function delayColor(avg: number): string {
   if (avg <= 0)  return '#2ea043'
@@ -37,7 +35,7 @@ function fmt(v: number | undefined | null): string {
   return v.toLocaleString()
 }
 
-// ── Hourly bar chart ───────────────────────────────────────────────────────
+// hourly bar chart
 
 function HourlyChart({ data }: { data: HourlyDelay[] }) {
   const ref = useRef<SVGSVGElement>(null)
@@ -62,7 +60,7 @@ function HourlyChart({ data }: { data: HourlyDelay[] }) {
     const maxDelay = d3.max(data, d => d.avg_dep_delay) ?? 1
     const y = d3.scaleLinear().domain([0, maxDelay]).nice().range([innerH, 0])
 
-    // Bars
+    // bars
     g.selectAll('rect')
       .data(data)
       .join('rect')
@@ -73,7 +71,7 @@ function HourlyChart({ data }: { data: HourlyDelay[] }) {
       .attr('fill', d => delayColor(d.avg_dep_delay))
       .attr('rx', 2)
 
-    // IQR range bars
+    // iqr
     g.selectAll('.iqr')
       .data(data)
       .join('rect')
@@ -88,7 +86,7 @@ function HourlyChart({ data }: { data: HourlyDelay[] }) {
       .attr('stroke', '#58a6ff66')
       .attr('stroke-width', 0.5)
 
-    // Axes
+    // axes
     g.append('g')
       .attr('transform', `translate(0,${innerH})`)
       .call(
@@ -121,7 +119,7 @@ function HourlyChart({ data }: { data: HourlyDelay[] }) {
   return <svg ref={ref} style={{ width: '100%', height: 140 }} />
 }
 
-// ── PropBar (mini horizontal bar) ─────────────────────────────────────────
+// prop bar
 
 function PropRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   return (
@@ -135,7 +133,7 @@ function PropRow({ label, value, max, color }: { label: string; value: number; m
   )
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// main component
 
 const card: React.CSSProperties = {
   background: '#161b22',
@@ -227,7 +225,7 @@ export default function AirportDetail({ code, onBack }: Props) {
         ))}
       </div>
 
-      {/* Delay breakdown — only shown when source data includes delay-cause columns */}
+      {/* Delay breakdown */}
       {[airport.avg_carrier_delay, airport.avg_weather_delay, airport.avg_nas_delay, airport.avg_late_aircraft_delay].some(v => v != null) && (
         <div style={card}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: '#c9d1d9' }}>
@@ -268,7 +266,7 @@ export default function AirportDetail({ code, onBack }: Props) {
         </div>
       </div>
 
-      {/* Hourly delay chart */}
+      {/* hourly delay chart */}
       {hourly && hourly.length > 0 && (
         <div style={card}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#c9d1d9' }}>
@@ -281,7 +279,7 @@ export default function AirportDetail({ code, onBack }: Props) {
         </div>
       )}
 
-      {/* Propagation */}
+      {/* propagation */}
       {prop && (prop.as_hub.length > 0 || prop.as_destination.length > 0) && (
         <div style={card}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10, color: '#c9d1d9' }}>

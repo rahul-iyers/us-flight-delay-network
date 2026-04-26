@@ -1,5 +1,5 @@
 /**
- * View 4 — Airline Comparison Panel
+ airline comparison panel
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
@@ -13,7 +13,7 @@ const PALETTE = [
 ]
 const airlineColor = (i: number) => PALETTE[i % PALETTE.length]
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// helpers for formatting
 
 function fmtDelay(v: number | null | undefined) {
   return v != null ? v.toFixed(1) + 'm' : '—'
@@ -22,9 +22,7 @@ function fmtPct(v: number | null | undefined) {
   return v != null ? (v * 100).toFixed(1) + '%' : '—'
 }
 
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-// Uses a wrapper div to get a reliable pixel width, and a ResizeObserver
-// to redraw when the container resizes.
+// bar chart
 
 function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof AirlineStat }) {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -40,7 +38,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
     const iW = W - m.left - m.right
     const iH = H - m.top - m.bottom
 
-    // Filter to rows that have a real value for this metric
+    // filter to real values
     const valid = data.filter(d => d[metric] != null && isFinite(d[metric] as number))
     if (!valid.length) return
 
@@ -57,7 +55,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
     const maxVal = d3.max(sorted, d => d[metric] as number) ?? 1
     const y = d3.scaleLinear().domain([0, maxVal]).nice().range([iH, 0])
 
-    // Grid lines
+    //grid lines
     g.append('g').selectAll('line')
       .data(y.ticks(5))
       .join('line')
@@ -65,7 +63,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
       .attr('y1', d => y(d)).attr('y2', d => y(d))
       .attr('stroke', '#21262d')
 
-    // Bars
+    //bars
     g.selectAll('rect')
       .data(sorted)
       .join('rect')
@@ -76,7 +74,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
       .attr('fill', (_, i) => airlineColor(i))
       .attr('rx', 3)
 
-    // Value labels
+    //label values
     g.selectAll('.val')
       .data(sorted)
       .join('text')
@@ -91,7 +89,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
         return metric.includes('rate') ? `${(v * 100).toFixed(1)}%` : v.toFixed(1)
       })
 
-    // X axis
+    // x
     g.append('g')
       .attr('transform', `translate(0,${iH})`)
       .call(d3.axisBottom(x))
@@ -102,7 +100,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
         ax.selectAll('line,path').attr('stroke', '#30363d')
       })
 
-    // Y axis
+    // y
     g.append('g')
       .call(d3.axisLeft(y).ticks(5).tickFormat(v =>
         metric.includes('rate') ? `${(+v * 100).toFixed(0)}%` : `${v}m`
@@ -128,7 +126,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
   )
 }
 
-// ── Scatter plot ──────────────────────────────────────────────────────────────
+// scatter plot
 
 function ScatterPlot({ data }: { data: AirlineStat[] }) {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -144,7 +142,6 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
     const iW = W - m.left - m.right
     const iH = H - m.top - m.bottom
 
-    // Only use rows with valid on_time_rate
     const valid = data.filter(d => d.on_time_rate != null && d.total_flights > 0)
     if (!valid.length) return
 
@@ -158,7 +155,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
     const yMax = d3.max(valid, d => d.on_time_rate) ?? 1
     const y = d3.scaleLinear().domain([0, yMax]).nice().range([iH, 0])
 
-    // Grid
+    //grid
     g.append('g').selectAll('line')
       .data(y.ticks(5))
       .join('line')
@@ -166,7 +163,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
       .attr('y1', d => y(d)).attr('y2', d => y(d))
       .attr('stroke', '#21262d')
 
-    // Points
+    //points
     g.selectAll('circle')
       .data(valid)
       .join('circle')
@@ -176,7 +173,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
       .attr('fill', (_, i) => airlineColor(i))
       .attr('opacity', 0.85)
 
-    // Labels
+    //labels
     g.selectAll('text.lbl')
       .data(valid)
       .join('text')
@@ -187,7 +184,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
       .attr('fill', '#8b949e')
       .text(d => d.airline_code)
 
-    // Axes
+    //axes
     g.append('g')
       .attr('transform', `translate(0,${iH})`)
       .call(d3.axisBottom(x).tickFormat(v => d3.format('.2s')(+v)))
@@ -230,7 +227,7 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
   )
 }
 
-// ── Propagation hubs table ────────────────────────────────────────────────────
+// propagation hubs table
 
 function PropHubsTable({ data }: { data: PropagationHub[] }) {
   return (
@@ -257,9 +254,9 @@ function PropHubsTable({ data }: { data: PropagationHub[] }) {
   )
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// main funcs
 
-// Only show metrics that have real data (no arr_delay in this dataset)
+// only show metrics that have real data (no arr_delay in this dataset)
 type Metric = 'avg_dep_delay' | 'cancellation_rate' | 'on_time_rate' | 'dep_delay_rate'
 
 const METRICS: { key: Metric; label: string }[] = [
@@ -302,7 +299,7 @@ export default function AirlineComparison() {
         Comparing {airlines.length} carriers across key performance metrics.
       </div>
 
-      {/* Metric selector */}
+      {/* metric selector */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
         {METRICS.map(m => (
           <button
@@ -321,7 +318,7 @@ export default function AirlineComparison() {
         ))}
       </div>
 
-      {/* Bar chart */}
+      {/* bar chart */}
       <div style={card}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#c9d1d9', marginBottom: 10 }}>
           {METRICS.find(m => m.key === metric)?.label} by Airline
@@ -329,7 +326,7 @@ export default function AirlineComparison() {
         <DelayBarChart data={airlines} metric={metric} />
       </div>
 
-      {/* Scatter */}
+      {/* scatter */}
       <div style={card}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#c9d1d9', marginBottom: 6 }}>
           On-Time Rate vs. Flight Volume
@@ -340,7 +337,7 @@ export default function AirlineComparison() {
         <ScatterPlot data={airlines} />
       </div>
 
-      {/* Summary table */}
+      {/* summary table */}
       <div style={card}>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#c9d1d9', marginBottom: 10 }}>
           All Airlines — Summary Stats
@@ -375,7 +372,7 @@ export default function AirlineComparison() {
         </div>
       </div>
 
-      {/* Top propagation hubs */}
+      {/* top propagation hubs */}
       {hubs && hubs.length > 0 && (
         <div style={card}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#c9d1d9', marginBottom: 10 }}>

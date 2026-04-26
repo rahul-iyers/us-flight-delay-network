@@ -145,7 +145,7 @@ export default function Sidebar({
         ))}
       </div>
 
-      {/* Selected airport badge */}
+      {/* selected airport badge */}
       {selectedAirport && (
         <div style={s.section}>
           <div style={s.sectionTitle}>Selected Airport</div>
@@ -155,7 +155,7 @@ export default function Sidebar({
         </div>
       )}
 
-      {/* Overlays section */}
+      {/* overlays section */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Overlays</div>
         <div style={s.toggle(showPropagation)} onClick={onTogglePropagation}>
@@ -166,7 +166,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Hour filter */}
+      {/* hour filter */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Departure Hour</div>
         <div style={s.rangeLabel}>
@@ -189,7 +189,7 @@ export default function Sidebar({
         />
       </div>
 
-      {/* Legend */}
+      {/* legend */}
       <div style={s.section}>
         <div style={s.sectionTitle}>Delay Legend</div>
         {[

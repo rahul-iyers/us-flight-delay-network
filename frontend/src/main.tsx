@@ -6,7 +6,7 @@ import App from './App'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 min — parquet data doesn't change mid-session
+      staleTime: 300000,
       retry: 2,
     },
   },

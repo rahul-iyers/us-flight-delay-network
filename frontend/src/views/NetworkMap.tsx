@@ -1,9 +1,5 @@
 /**
- * View 1 — US Network Map
- * Renders airports as SVG circles over a US basemap using d3-geo (AlbersUSA).
- * Edges are curved paths coloured by delay severity.
- * Node colours reflect avg dep delay for the selected departure hour range.
- * Clicking a node fires onSelectAirport.
+u.s. network map
  */
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import * as d3 from 'd3'
@@ -60,14 +56,14 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
     enabled: showPropagation,
   })
 
-  // Fetch hourly delay averages for the selected hour window
+  // fetch hourly delay averages for the selected hour
   const { data: hourlyData } = useQuery({
     queryKey: ['hourly-all', filterHour[0], filterHour[1]],
     queryFn: () => fetchAllHourly(filterHour[0], filterHour[1]),
     staleTime: 60_000,
   })
 
-  // Build airport_code → avg_dep_delay for the current hour filter
+  // map airport_code to avg_dep_delay for the current hour filter
   const hourlyDelayMap = useMemo(() => {
     const m = new Map<string, number>()
     if (hourlyData) {
@@ -78,7 +74,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
     return m
   }, [hourlyData])
 
-  // Fetch US basemap topology (once)
+  // fetch us map topology
   useEffect(() => {
     fetch(US_TOPO_URL)
       .then(r => r.json())
@@ -96,14 +92,14 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
     svg.attr('width', width).attr('height', height)
     svg.selectAll('*').remove()
 
-    // ── Projection ───────────────────────────────────────────────────────────
+    // projection
     const projection = d3.geoAlbersUsa()
       .translate([width / 2, height / 2])
       .scale(Math.min(width, height) * 1.2)
 
     const pathGen = d3.geoPath().projection(projection)
 
-    // ── Basemap ──────────────────────────────────────────────────────────────
+    // basemap
     const statesGeo = topojson.feature(topoData, (topoData as any).objects.states) as unknown as GeoJSON.FeatureCollection
 
     const g = svg.append('g')
@@ -118,7 +114,6 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
       .attr('stroke', '#30363d')
       .attr('stroke-width', 0.5)
 
-    // ── Node lookup + projection helper ─────────────────────────────────────
     const nodeMap = new Map<string, AirportNode>()
     graph.nodes.forEach(n => nodeMap.set(n.id ?? n.airport_code, n))
 
@@ -127,13 +122,12 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
       return projection([n.lon, n.lat]) ?? null
     }
 
-    // Resolve delay for a node: prefer hourly-filtered value, fall back to all-day avg
     const nodeDelay = (n: AirportNode): number => {
       const code = n.id ?? n.airport_code
       return hourlyDelayMap.get(code) ?? n.avg_dep_delay ?? 0
     }
 
-    // ── Edges ─────────────────────────────────────────────────────────────────
+    // edges
     const edges = graph.edges.filter(e => {
       const s = nodeMap.get(e.source)
       const t = nodeMap.get(e.target)
@@ -159,7 +153,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
       .attr('stroke-width', e => Math.max(0.3, Math.log1p(e.total_flights / 5000) * 0.8))
       .attr('stroke-opacity', 0.3)
 
-    // ── Propagation overlay ──────────────────────────────────────────────────
+    // propagation overlay
     if (showPropagation && propData && propData.length > 0) {
       const maxCount = d3.max(propData, (d: PropagationSummary) => d.propagation_count) ?? 1
 
@@ -188,7 +182,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
         .attr('stroke-dasharray', '4 3')
     }
 
-    // ── Nodes ─────────────────────────────────────────────────────────────────
+    // nodes
     const maxFlights = d3.max(graph.nodes, n => n.total_flights) ?? 1
     const rScale = d3.scaleSqrt().domain([0, maxFlights]).range([3, 18])
 
@@ -240,7 +234,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
         onSelectAirport(d.n.id ?? d.n.airport_code)
       })
 
-    // ── Labels for major hubs ─────────────────────────────────────────────────
+    // major hubs labels
     const labelFloorFlights = rScale.invert(7)
     nodeG.selectAll<SVGTextElement, NodeDatum>('text')
       .data(nodesWithPos.filter(d => d.n.total_flights >= labelFloorFlights))
@@ -253,7 +247,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
       .attr('pointer-events', 'none')
       .text(d => d.n.id ?? d.n.airport_code)
 
-    // ── Zoom / pan ────────────────────────────────────────────────────────────
+    // zooming and panning
     svg.call(
       d3.zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.5, 12])
@@ -287,7 +281,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
       )}
       <svg ref={svgRef} style={{ display: 'block', width: '100%', height: '100%' }} />
 
-      {/* Hour filter indicator */}
+      {/* hour filter indicator */}
       {isFiltered && (
         <div style={{
           position: 'absolute', top: 10, left: 10,

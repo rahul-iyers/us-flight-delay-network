@@ -1,7 +1,8 @@
-// ─── Airport ─────────────────────────────────────────────────────────────────
+
+// here, we define interfaces for our ts so we didn't run into any type errors during development
 
 export interface AirportNode {
-  id: string            // IATA code (used as D3 node id)
+  id: string            
   airport_code: string
   lat: number | null
   lon: number | null
@@ -41,11 +42,10 @@ export interface HourlyDelay {
   dep_delay_rate: number
 }
 
-// ─── Route / Edge ─────────────────────────────────────────────────────────────
-
+// route / edge
 export interface RouteEdge {
-  source: string   // origin IATA
-  target: string   // dest IATA
+  source: string 
+  target: string 
   origin: string
   dest: string
   total_flights: number
@@ -54,19 +54,17 @@ export interface RouteEdge {
   cancellation_rate: number
   dep_delay_rate: number
   avg_distance: number
-  delay_severity: number   // 0–1 normalised score
+  delay_severity: number 
 }
 
-// ─── Network ─────────────────────────────────────────────────────────────────
-
+// network
 export interface GraphPayload {
   nodes: AirportNode[]
   edges: RouteEdge[]
   communities: Record<string, number>
 }
 
-// ─── Propagation ─────────────────────────────────────────────────────────────
-
+// propagation
 export interface PropagationSummary {
   hub_airport: string
   outbound_dest: string
@@ -91,8 +89,7 @@ export interface PropagationHub {
   avg_outbound_delay: number
 }
 
-// ─── Airline ─────────────────────────────────────────────────────────────────
-
+// airline
 export interface AirlineStat {
   airline_code: string
   airline_name: string
@@ -108,7 +105,7 @@ export interface AirlineStat {
 }
 
 export interface MonthlyTrend {
-  month: string   // "YYYY-MM"
+  month: string   
   total_flights: number
   avg_dep_delay: number
   avg_arr_delay: number
@@ -116,8 +113,7 @@ export interface MonthlyTrend {
   dep_delay_rate: number
 }
 
-// ─── Propagation Tree ────────────────────────────────────────────────────────
-
+// propagation tree
 export interface PropagationTreeNode {
   id: string
   parent: string | null
@@ -140,10 +136,8 @@ export interface PropagationTreeData {
   nodes: PropagationTreeNode[]
 }
 
-// ─── UI state ────────────────────────────────────────────────────────────────
-
+// ui state
 export type ViewName = 'map' | 'airport' | 'timeline' | 'airlines' | 'propagation'
-
 export interface AppState {
   activeView: ViewName
   selectedAirport: string | null

@@ -1,6 +1,5 @@
-/**
- * Thin API client — all requests go through the Vite proxy at /api → localhost:8000
- */
+
+// api client where we have all request go through the vite proxy
 
 import type {
   AirportNode, AirportStats, HourlyDelay,
@@ -23,8 +22,7 @@ async function get<T>(path: string, params?: Record<string, string | number | bo
   return res.json() as Promise<T>
 }
 
-// ─── Airports ────────────────────────────────────────────────────────────────
-
+// airports
 export const fetchAirports = (params?: { state?: string; min_flights?: number; limit?: number }) =>
   get<AirportNode[]>('/airports/', params as Record<string, number>)
 
@@ -40,16 +38,14 @@ export const fetchAllHourly = (hourStart: number, hourEnd: number) =>
     { hour_start: hourStart, hour_end: hourEnd }
   )
 
-// ─── Network / Graph ─────────────────────────────────────────────────────────
-
+// network / graph
 export const fetchGraph = (params?: { top_edges?: number; min_flights?: number }) =>
   get<GraphPayload>('/network/graph', params as Record<string, number>)
 
 export const fetchCommunities = () =>
   get<Record<string, string[]>>('/network/communities')
 
-// ─── Propagation ─────────────────────────────────────────────────────────────
-
+// propagation
 export const fetchPropagationSummary = (params?: {
   hub?: string; dest?: string; min_count?: number; limit?: number
 }) => get<PropagationSummary[]>('/propagation/summary', params as Record<string, string | number>)
@@ -67,8 +63,7 @@ export const fetchPropagationTree = (params: {
   max_per_node?: number
 }) => get<PropagationTreeData>('/propagation/tree', params as Record<string, string | number>)
 
-// ─── Airlines ────────────────────────────────────────────────────────────────
-
+// airlines
 export const fetchAirlines = (limit = 50) =>
   get<AirlineStat[]>('/airlines/', { limit })
 

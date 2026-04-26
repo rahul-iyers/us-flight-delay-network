@@ -1,7 +1,5 @@
 /**
- * View 3 — Timeline / Animation
- * Plays delay levels across the 24-hour day using a scrubber.
- * The map colour-codes airport nodes by their average delay for that hour.
+ view for timeline / animation
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
@@ -38,7 +36,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
     const maxDelay = d3.max(data, d => d.avg_dep_delay) ?? 1
     const y = d3.scaleLinear().domain([0, maxDelay]).nice().range([iH, 0])
 
-    // Grid
+    // grid
     g.append('g').selectAll('line')
       .data(y.ticks(5))
       .join('line')
@@ -46,7 +44,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
       .attr('y1', d => y(d)).attr('y2', d => y(d))
       .attr('stroke', '#21262d').attr('stroke-dasharray', '3 3')
 
-    // Area
+    // area
     const area = d3.area<MonthlyTrend>()
       .x(d => x(d.month)!)
       .y0(iH)
@@ -58,7 +56,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
       .attr('d', area)
       .attr('fill', '#f7816622')
 
-    // Line — dep delay
+    // line - dep delay
     const line = d3.line<MonthlyTrend>()
       .x(d => x(d.month)!)
       .y(d => y(d.avg_dep_delay))
@@ -71,7 +69,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
       .attr('stroke', '#f78166')
       .attr('stroke-width', 2)
 
-    // Cancellation line (secondary y)
+    // cancellation line
     const maxCancel = d3.max(data, d => d.cancellation_rate) ?? 0.1
     const yC = d3.scaleLinear().domain([0, maxCancel]).range([iH, 0])
     const lineC = d3.line<MonthlyTrend>()
@@ -87,7 +85,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
       .attr('stroke-width', 1.5)
       .attr('stroke-dasharray', '5 3')
 
-    // Axes
+    // axes
     g.append('g')
       .attr('transform', `translate(0,${iH})`)
       .call(d3.axisBottom(x)
@@ -106,7 +104,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
         ax.selectAll('line,path').attr('stroke', '#30363d')
       })
 
-    // Legend
+    // legend
     const legend = svg.append('g').attr('transform', `translate(${m.left + 10},${m.top + 6})`)
     legend.append('line').attr('x1', 0).attr('x2', 16).attr('stroke', '#f78166').attr('stroke-width', 2)
     legend.append('text').attr('x', 20).attr('y', 4).attr('fill', '#8b949e').attr('font-size', 10).text('Avg dep delay')
@@ -117,7 +115,7 @@ function MonthlyChart({ data }: { data: MonthlyTrend[] }) {
   return <svg ref={ref} style={{ width: '100%', height: 180 }} />
 }
 
-// Timeline map (mini)
+// timeline map
 function TimelineMap({
   nodes, hour, topoData,
 }: {
@@ -165,8 +163,6 @@ function TimelineMap({
         .attr('cy', n => (projection([n.lon!, n.lat!]) ?? [0, 0])[1])
         .attr('r', n => rScale(n.total_flights))
         .attr('fill', n => {
-          // In a full implementation, per-airport hourly data would be fetched.
-          // Here we simulate by offsetting the airport's average by a time-of-day factor.
           const factor = 1 + 0.3 * Math.sin((hour - 7) * Math.PI / 12)
           return delayColor((n.avg_dep_delay ?? 0) * factor)
         })
