@@ -96,8 +96,3 @@ Then open [http://localhost:5173](http://localhost:5173) in your browser.
 | **Airline Comparison** | Bar chart, scatter plot, and summary table comparing all carriers. |
 
 
-## Sidebar controls
-
-- **Departure Hour slider** — filters node colors on the map to show avg delay only for flights departing in that hour range
-- **Show Propagation** — overlays dashed orange lines showing which routes most frequently propagate delays
-- **Click an airport** — switches to the Airport Detail view for that airport
