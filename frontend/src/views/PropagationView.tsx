@@ -333,10 +333,6 @@ const labelSt: React.CSSProperties = {
   fontSize: 10, fontWeight: 600, color: '#6e7681',
   textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6,
 }
-const btnSt: React.CSSProperties = {
-  background: '#21262d', border: '1px solid #30363d', borderRadius: 4,
-  color: '#c9d1d9', padding: '5px 10px', cursor: 'pointer', fontSize: 12,
-}
 const chipSt: React.CSSProperties = {
   padding: '2px 6px', borderRadius: 4, fontSize: 10, cursor: 'pointer',
   border: '1px solid', fontFamily: 'monospace', letterSpacing: '0.04em',
@@ -349,7 +345,6 @@ export default function PropagationView() {
   const [inputText,   setInputText]     = useState('ATL')
   const [hops,        setHops]          = useState(3)
   const [minCount,    setMinCount]      = useState(200)
-  const [history,     setHistory]       = useState<string[]>([])
   const [tooltip,     setTooltip]       = useState<TooltipState | null>(null)
 
   const svgRef = useRef<SVGSVGElement>(null)
@@ -366,34 +361,19 @@ export default function PropagationView() {
     retry: false,
   })
 
-  const navigate = useCallback((airport: string, pushHistory = true) => {
+  const navigate = useCallback((airport: string) => {
     if (airport === rootAirport) return
-    if (pushHistory) setHistory(h => [...h, rootAirport])
     setRootAirport(airport)
     setInputText(airport)
     setTooltip(null)
   }, [rootAirport])
 
-  const goBack = useCallback(() => {
-    const prev = history[history.length - 1]
-    if (!prev) return
-    setHistory(h => h.slice(0, -1))
-    setRootAirport(prev)
-    setInputText(prev)
-    setTooltip(null)
-  }, [history])
-
   const reset = useCallback((code: string) => {
-    setHistory([])
     setRootAirport(code)
     setInputText(code)
     setTooltip(null)
   }, [])
 
-  const commitInput = useCallback(() => {
-    const code = inputText.trim().toUpperCase()
-    if (/^[A-Z]{3}$/.test(code)) reset(code)
-  }, [inputText, reset])
 
   useEffect(() => {
     if (!svgRef.current || !treeData || treeData.node_count <= 1) return
@@ -420,19 +400,12 @@ export default function PropagationView() {
         {/* Airport selector */}
         <div>
           <div style={labelSt}>Root Airport</div>
-          <div style={{ display: 'flex', gap: 5 }}>
-            <input
-              value={inputText}
-              onChange={e => setInputText(e.target.value.toUpperCase().slice(0, 3))}
-              onKeyDown={e => e.key === 'Enter' && commitInput()}
-              maxLength={3}
-              style={{
+          <div style={{
                 flex: 1, background: '#21262d', border: '1px solid #30363d', borderRadius: 4,
                 color: '#f0f6fc', padding: '5px 8px', fontSize: 15, fontWeight: 700,
                 letterSpacing: 2, fontFamily: 'monospace', textAlign: 'center',
-              }}
-            />
-            <button onClick={commitInput} style={btnSt}>Go</button>
+              }}>
+            {inputText}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
             {POPULAR.map(code => (
@@ -482,25 +455,6 @@ export default function PropagationView() {
             Lower = more airports shown
           </div>
         </div>
-
-        {/* Navigation history */}
-        {history.length > 0 && (
-          <div>
-            <div style={labelSt}>Navigation</div>
-            <button onClick={goBack} style={{ ...btnSt, width: '100%', textAlign: 'left', padding: '6px 10px' }}>
-              ← {history[history.length - 1]}
-            </button>
-            {history.length > 1 && (
-              <button onClick={() => reset('ATL')}
-                style={{ ...btnSt, width: '100%', textAlign: 'left', padding: '4px 10px', marginTop: 4, fontSize: 11, color: '#6e7681' }}>
-                Reset to start
-              </button>
-            )}
-            <div style={{ fontSize: 9, color: '#30363d', marginTop: 5, lineHeight: 1.5, wordBreak: 'break-all' }}>
-              {history.join(' → ')} → {rootAirport}
-            </div>
-          </div>
-        )}
 
         {/* Stats */}
         {treeData && treeData.node_count > 1 && (

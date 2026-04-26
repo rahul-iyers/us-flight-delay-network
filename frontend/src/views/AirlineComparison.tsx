@@ -32,7 +32,7 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
     if (!svgRef.current || !wrapRef.current || !data.length) return
 
     const W = wrapRef.current.clientWidth
-    if (!W) return
+
     const H = 280
     const m = { top: 10, right: 16, bottom: 90, left: 52 }
     const iW = W - m.left - m.right
@@ -40,7 +40,6 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
 
     // filter to real values
     const valid = data.filter(d => d[metric] != null && isFinite(d[metric] as number))
-    if (!valid.length) return
 
     const svg = d3.select(svgRef.current).attr('width', W).attr('height', H)
     svg.selectAll('*').remove()
@@ -72,7 +71,6 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
       .attr('width', x.bandwidth())
       .attr('height', d => Math.max(0, iH - y(Math.max(0, d[metric] as number))))
       .attr('fill', (_, i) => airlineColor(i))
-      .attr('rx', 3)
 
     //label values
     g.selectAll('.val')
@@ -136,14 +134,12 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
     if (!svgRef.current || !wrapRef.current || !data.length) return
 
     const W = wrapRef.current.clientWidth
-    if (!W) return
     const H = 260
     const m = { top: 16, right: 16, bottom: 36, left: 52 }
     const iW = W - m.left - m.right
     const iH = H - m.top - m.bottom
 
     const valid = data.filter(d => d.on_time_rate != null && d.total_flights > 0)
-    if (!valid.length) return
 
     const svg = d3.select(svgRef.current).attr('width', W).attr('height', H)
     svg.selectAll('*').remove()
