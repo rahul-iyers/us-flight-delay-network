@@ -5,7 +5,7 @@ import type {
   AirportNode, AirportStats, HourlyDelay,
   RouteEdge, GraphPayload,
   PropagationSummary, AirportPropagation, PropagationHub, PropagationTreeData,
-  AirlineStat, MonthlyTrend,
+  AirlineStat,
 } from './types'
 
 const BASE = '/api'
@@ -66,6 +66,3 @@ export const fetchPropagationTree = (params: {
 // airlines
 export const fetchAirlines = (limit = 50) =>
   get<AirlineStat[]>('/airlines/', { limit })
-
-export const fetchMonthlyTrends = () =>
-  get<MonthlyTrend[]>('/airlines/monthly')

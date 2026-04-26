@@ -3,7 +3,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PROCESSED_DIR = ROOT / "data" / "processed"
 
-# Parquet file paths
 AIRPORT_STATS   = PROCESSED_DIR / "airport_stats.parquet"
 ROUTE_STATS     = PROCESSED_DIR / "route_stats.parquet"
 HOURLY_DELAYS   = PROCESSED_DIR / "hourly_delays.parquet"

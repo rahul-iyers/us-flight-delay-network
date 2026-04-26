@@ -62,7 +62,6 @@ def get_graph(
         edges = [e for e in edges if (e.get("total_flights") or 0) >= min_flights]
     edges = sorted(edges, key=lambda e: e.get("total_flights") or 0, reverse=True)[:top_edges]
     result = _sanitize({"nodes": payload["nodes"], "edges": edges, "communities": payload.get("communities", {})})
-    # Use Response to bypass FastAPI's own serializer (which rejects nan)
     return Response(content=json.dumps(result), media_type="application/json")
 
 

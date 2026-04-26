@@ -122,7 +122,6 @@ def get_propagation_tree(
     visited = {airport}
     current = [airport]
 
-    # Reduce children per node at deeper hops to keep the tree readable
     per_hop_cap = [max_per_node, max(3, max_per_node // 2), max(2, max_per_node // 4), 1]
 
     for hop_num in range(1, hops + 1):

@@ -104,15 +104,6 @@ export interface AirlineStat {
   routes_served: number
 }
 
-export interface MonthlyTrend {
-  month: string   
-  total_flights: number
-  avg_dep_delay: number
-  avg_arr_delay: number
-  cancellation_rate: number
-  dep_delay_rate: number
-}
-
 // propagation tree
 export interface PropagationTreeNode {
   id: string
@@ -137,7 +128,7 @@ export interface PropagationTreeData {
 }
 
 // ui state
-export type ViewName = 'map' | 'airport' | 'timeline' | 'airlines' | 'propagation'
+export type ViewName = 'map' | 'airport' | 'airlines' | 'propagation'
 export interface AppState {
   activeView: ViewName
   selectedAirport: string | null

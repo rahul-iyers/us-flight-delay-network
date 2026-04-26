@@ -36,8 +36,6 @@ def _load_hourly() -> pd.DataFrame:
     return pd.read_parquet(HOURLY_DELAYS)
 
 
-# ---------------------------------------------------------------------------
-
 @router.get("/")
 def list_airports(
     state: Optional[str] = Query(None, description="Filter by 2-letter state code"),

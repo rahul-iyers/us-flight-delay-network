@@ -3,7 +3,6 @@ import type { ViewName, AppState } from './types'
 import Sidebar from './components/Sidebar'
 import NetworkMap from './views/NetworkMap'
 import AirportDetail from './views/AirportDetail'
-import Timeline from './views/Timeline'
 import AirlineComparison from './views/AirlineComparison'
 import PropagationView from './views/PropagationView'
 
@@ -60,10 +59,7 @@ export default function App() {
             onBack={() => setView('map')}
           />
         )}
-        {state.activeView === 'timeline' && (
-          <Timeline />
-        )}
-        {state.activeView === 'airlines' && (
+{state.activeView === 'airlines' && (
           <AirlineComparison />
         )}
         {state.activeView === 'propagation' && (

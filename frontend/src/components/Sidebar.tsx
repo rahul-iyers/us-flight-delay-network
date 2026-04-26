@@ -16,8 +16,7 @@ const NAV: { id: ViewName; label: string; icon: string }[] = [
   { id: 'map',         label: 'Network Map',        icon: '🗺' },
   { id: 'airport',     label: 'Airport Detail',      icon: '✈' },
   { id: 'propagation', label: 'Delay Propagation',   icon: '🔗' },
-  { id: 'timeline',    label: 'Timeline',            icon: '⏱' },
-  { id: 'airlines',    label: 'Airline Comparison',  icon: '📊' },
+{ id: 'airlines',    label: 'Airline Comparison',  icon: '📊' },
 ]
 
 const s = {
