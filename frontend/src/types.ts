@@ -11,7 +11,6 @@ export interface AirportNode {
   full_name: string
   total_flights: number
   avg_dep_delay: number
-  avg_arr_delay: number
   cancellation_rate: number
   on_time_rate: number
   degree_centrality: number
@@ -38,7 +37,6 @@ export interface HourlyDelay {
   avg_dep_delay: number
   p25_dep_delay: number
   p75_dep_delay: number
-  avg_arr_delay: number
   dep_delay_rate: number
 }
 
@@ -50,7 +48,6 @@ export interface RouteEdge {
   dest: string
   total_flights: number
   avg_dep_delay: number
-  avg_arr_delay: number
   cancellation_rate: number
   dep_delay_rate: number
   avg_distance: number
@@ -96,7 +93,6 @@ export interface AirlineStat {
   total_flights: number
   avg_dep_delay: number
   median_dep_delay: number
-  avg_arr_delay: number
   cancellation_rate: number
   dep_delay_rate: number
   on_time_rate: number

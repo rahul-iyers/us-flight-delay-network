@@ -2,8 +2,8 @@
 // api client where we have all request go through the vite proxy
 
 import type {
-  AirportNode, AirportStats, HourlyDelay,
-  RouteEdge, GraphPayload,
+  AirportStats, HourlyDelay,
+  GraphPayload,
   PropagationSummary, AirportPropagation, PropagationHub, PropagationTreeData,
   AirlineStat,
 } from './types'
@@ -23,8 +23,6 @@ async function get<T>(path: string, params?: Record<string, string | number | bo
 }
 
 // airports
-export const fetchAirports = (params?: { state?: string; min_flights?: number; limit?: number }) =>
-  get<AirportNode[]>('/airports/', params as Record<string, number>)
 
 export const fetchAirport = (code: string) =>
   get<AirportStats>(`/airports/${code}`)
