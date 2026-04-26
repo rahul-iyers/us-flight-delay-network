@@ -53,17 +53,17 @@ export default function App() {
             filterHour={state.filterHour}
           />
         )}
+        {state.activeView === 'airlines' && (
+          <AirlineComparison />
+        )}
+        {state.activeView === 'propagation' && (
+          <PropagationView />
+        )}
         {state.activeView === 'airport' && state.selectedAirport && (
           <AirportDetail
             code={state.selectedAirport}
             onBack={() => setView('map')}
           />
-        )}
-{state.activeView === 'airlines' && (
-          <AirlineComparison />
-        )}
-        {state.activeView === 'propagation' && (
-          <PropagationView />
         )}
         {state.activeView === 'airport' && !state.selectedAirport && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8b949e' }}>

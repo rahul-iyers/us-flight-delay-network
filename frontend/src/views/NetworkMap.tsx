@@ -1,6 +1,3 @@
-/**
-u.s. network map
- */
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
@@ -303,7 +300,7 @@ export default function NetworkMap({ onSelectAirport, showPropagation, filterHou
         position: 'absolute', bottom: 10, right: 14, fontSize: 10,
         color: '#484f58', pointerEvents: 'none',
       }}>
-        Scroll to zoom : Drag to pan : Click airport for detail
+        Scroll to zoom, Drag to pan, Click airport for detail
       </div>
     </div>
   )

@@ -1,6 +1,4 @@
 
-// here, we define interfaces for our ts so we didn't run into any type errors during development
-
 export interface AirportNode {
   id: string            
   airport_code: string

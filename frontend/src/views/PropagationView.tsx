@@ -1,6 +1,3 @@
-/**
- delay propagation tree
- */
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { useQuery } from '@tanstack/react-query'

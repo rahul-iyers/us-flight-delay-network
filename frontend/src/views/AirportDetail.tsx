@@ -1,6 +1,3 @@
-/**
- airport detail panel
- */
 import React, { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { useQuery } from '@tanstack/react-query'
@@ -11,8 +8,6 @@ interface Props {
   code: string
   onBack: () => void
 }
-
-//colors
 
 function delayColor(avg: number): string {
   if (avg <= 0)  return '#2ea043'

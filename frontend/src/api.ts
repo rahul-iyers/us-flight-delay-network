@@ -1,6 +1,3 @@
-
-// api client where we have all request go through the vite proxy
-
 import type {
   AirportStats, HourlyDelay,
   GraphPayload,
@@ -23,7 +20,6 @@ async function get<T>(path: string, params?: Record<string, string | number | bo
 }
 
 // airports
-
 export const fetchAirport = (code: string) =>
   get<AirportStats>(`/airports/${code}`)
 

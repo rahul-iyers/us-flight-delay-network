@@ -1,6 +1,3 @@
-/**
- airline comparison panel
- */
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as d3 from 'd3'
 import { useQuery } from '@tanstack/react-query'
@@ -14,15 +11,12 @@ const PALETTE = [
 const airlineColor = (i: number) => PALETTE[i % PALETTE.length]
 
 // helpers for formatting
-
 function fmtDelay(v: number | null | undefined) {
   return v != null ? v.toFixed(1) + 'm' : '-'
 }
 function fmtPct(v: number | null | undefined) {
   return v != null ? (v * 100).toFixed(1) + '%' : '-'
 }
-
-// bar chart
 
 function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof AirlineStat }) {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -124,8 +118,6 @@ function DelayBarChart({ data, metric }: { data: AirlineStat[]; metric: keyof Ai
   )
 }
 
-// scatter plot
-
 function ScatterPlot({ data }: { data: AirlineStat[] }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const svgRef  = useRef<SVGSVGElement>(null)
@@ -222,8 +214,6 @@ function ScatterPlot({ data }: { data: AirlineStat[] }) {
     </div>
   )
 }
-
-// propagation hubs table
 
 function PropHubsTable({ data }: { data: PropagationHub[] }) {
   return (
