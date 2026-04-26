@@ -1,47 +1,36 @@
-"""
-FastAPI backend for the flight-delay visualisation project.
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-Start with:
-    uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-or from the project root:
-    cd backend && uvicorn main:app --reload
-"""
-
-import json
-from functools import lru_cache
+from routers import airports, routes, network, propagation, airlines
 from pathlib import Path
 
-import pandas as pd
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+ROOT = Path(__file__).resolve().parent.parent
+PROCESSED_DIR = ROOT / "data" / "processed"
 
-from config import (
-    AIRPORT_STATS, ROUTE_STATS, HOURLY_DELAYS, AIRLINE_STATS,
-    MONTHLY_STATS, NETWORK_NODES, NETWORK_EDGES,
-    PROPAGATION, PROP_SUMMARY, GRAPH_JSON, CORS_ORIGINS,
-)
-from routers import airports, routes, network, propagation, airlines
+# processed data file paths
+AIRPORT_STATS = PROCESSED_DIR / "airport_stats.parquet"
+ROUTE_STATS = PROCESSED_DIR / "route_stats.parquet"
+HOURLY_DELAYS = PROCESSED_DIR / "hourly_delays.parquet"
+AIRLINE_STATS = PROCESSED_DIR / "airline_stats.parquet"
+NETWORK_NODES = PROCESSED_DIR / "network_nodes.parquet"
+PROPAGATION = PROCESSED_DIR / "propagation_edges.parquet"
+GRAPH_JSON = PROCESSED_DIR / "graph.json"
 
-app = FastAPI(
-    title="Flight Delay Propagation API",
-    version="1.0.0",
-    description="Serves aggregated BTS flight data for the CSE 6242 visualisation project.",
-)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(airports.router,    prefix="/airports",    tags=["airports"])
-app.include_router(routes.router,      prefix="/routes",      tags=["routes"])
-app.include_router(network.router,     prefix="/network",     tags=["network"])
+app.include_router(airports.router, prefix="/airports", tags=["airports"])
+app.include_router(routes.router, prefix="/routes", tags=["routes"])
+app.include_router(network.router, prefix="/network", tags=["network"])
 app.include_router(propagation.router, prefix="/propagation", tags=["propagation"])
-app.include_router(airlines.router,    prefix="/airlines",    tags=["airlines"])
+app.include_router(airlines.router, prefix="/airlines", tags=["airlines"])
 
 
 @app.get("/health")
