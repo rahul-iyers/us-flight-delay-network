@@ -1,108 +1,10 @@
-"""
-Phase 3 — Delay Propagation Algorithm
-=======================================
-For each flight, determine whether the delay was "propagated" from an inbound
-flight on the same aircraft (tail number matching) or via temporal proximity
-at a shared airport.
-
-Algorithm:
-  Primary  — Tail-number chaining:
-    Group flights by tail_num + date. For consecutive flights where the
-    aircraft turns around within PROPAGATION_WINDOW_MINUTES, if the inbound
-    flight had dep_delay >= threshold AND the outbound also had dep_delay >=
-    threshold, record a propagation edge (origin_of_inbound → dest_of_inbound
-    = origin_of_outbound → dest_of_outbound).
-
-  Fallback — Temporal correlation (used when tail_num is unavailable):
-    For each airport, find pairs of arrival/departure within the window where
-    both flights are significantly delayed.
-
-Output: propagation_edges.parquet with columns:
-    propagation_id, inbound_origin, hub_airport, outbound_dest,
-    inbound_arr_delay, outbound_dep_delay, turnaround_minutes,
-    fl_date, airline, tail_num, method
-
-Usage:
-    python pipeline/04_propagation.py
-"""
-
 import sys
 import duckdb
-import pandas as pd
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from config import (
-    CLEANED_PARQUET,
-    PROPAGATION_PARQUET,
-    PROCESSED_DIR,
-    PROPAGATION_WINDOW_MINUTES,
-    PROPAGATION_DELAY_THRESHOLD,
-)
 
-
-TAIL_NUM_PROPAGATION_SQL = """
--- Tail-number chaining: same aircraft, consecutive legs, both delayed
-WITH ranked AS (
-    SELECT
-        tail_num,
-        fl_date,
-        origin,
-        dest,
-        airline,
-        -- Reconstruct a sortable minute-of-day from the scheduled time string
-        -- crs_dep_time and arr_time are stored as HHMM integers
-        CAST(crs_dep_time AS INTEGER) / 100 * 60 + CAST(crs_dep_time AS INTEGER) % 100
-            AS dep_minute,
-        COALESCE(
-            CAST(arr_time AS INTEGER) / 100 * 60 + CAST(arr_time AS INTEGER) % 100,
-            CAST(crs_dep_time AS INTEGER) / 100 * 60 + CAST(crs_dep_time AS INTEGER) % 100
-        )                       AS arr_minute,
-        dep_delay,
-        arr_delay,
-        ROW_NUMBER() OVER (PARTITION BY tail_num, fl_date ORDER BY crs_dep_time)
-            AS leg
-    FROM read_parquet('{src}')
-    WHERE tail_num IS NOT NULL
-      AND tail_num != ''
-      AND is_cancelled = 0
-      AND crs_dep_time IS NOT NULL
-),
-consecutive AS (
-    SELECT
-        a.tail_num,
-        a.fl_date,
-        a.origin          AS inbound_origin,
-        a.dest            AS hub_airport,
-        b.dest            AS outbound_dest,
-        a.arr_delay       AS inbound_arr_delay,
-        b.dep_delay       AS outbound_dep_delay,
-        b.dep_minute - a.arr_minute  AS turnaround_minutes,
-        a.airline,
-        'tail_num'        AS method
-    FROM ranked  a
-    JOIN ranked  b
-      ON  a.tail_num = b.tail_num
-      AND a.fl_date  = b.fl_date
-      AND b.leg      = a.leg + 1
-      AND (b.dep_minute - a.arr_minute) BETWEEN 0 AND {window}
-    WHERE a.arr_delay  >= {threshold}
-      AND b.dep_delay  >= {threshold}
-)
-SELECT
-    ROW_NUMBER() OVER ()            AS propagation_id,
-    inbound_origin,
-    hub_airport,
-    outbound_dest,
-    inbound_arr_delay,
-    outbound_dep_delay,
-    turnaround_minutes,
-    fl_date,
-    airline,
-    tail_num,
-    method
-FROM consecutive
-"""
+from config import *
 
 
 TEMPORAL_PROPAGATION_SQL = """
@@ -117,7 +19,7 @@ WITH dep_col AS (
         airline,
         CAST(dep_delay AS DOUBLE)           AS dep_delay,
         is_cancelled,
-        dep_hour * 60                       AS dep_minute   -- hour-granularity from aggregated data
+        dep_hour * 60                       AS dep_minute
     FROM read_parquet('{src}')
     WHERE is_cancelled = 0
       AND dep_hour IS NOT NULL
@@ -137,7 +39,6 @@ matched AS (
         b.dep_minute - a.dep_minute AS turnaround_minutes,
         a.fl_date,
         a.airline,
-        NULL::VARCHAR   AS tail_num,
         'temporal'      AS method
     FROM delayed a
     JOIN delayed b
@@ -156,11 +57,9 @@ SELECT
     turnaround_minutes,
     fl_date,
     airline,
-    tail_num,
     method
 FROM matched
 """
-
 
 PROPAGATION_SUMMARY_SQL = """
 -- Summarise propagation edges into a per-route count table
@@ -180,65 +79,41 @@ ORDER BY propagation_count DESC
 
 
 def main() -> None:
-    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    src = str(CLEANED_PARQUET)
-
     con = duckdb.connect()
 
-    # Check which columns are present
-    cols = {r[0] for r in con.execute(
-        f"DESCRIBE SELECT * FROM read_parquet('{src}') LIMIT 0"
-    ).fetchall()}
-    has_tail    = "tail_num" in cols
-    has_arr     = "arr_time" in cols or "arr_delay" in cols
-    has_dep_sched = "crs_dep_time" in cols
-
-    if has_tail and has_dep_sched and has_arr:
-        print("[04] Running tail-number propagation algorithm…")
-        sql = TAIL_NUM_PROPAGATION_SQL.format(
-            src=src,
-            window=PROPAGATION_WINDOW_MINUTES,
-            threshold=PROPAGATION_DELAY_THRESHOLD,
-        )
-        method = "tail_num"
-    else:
-        print("[04] Using temporal correlation propagation…")
-        print(f"      (tail_num={has_tail}, arr_time/delay={has_arr}, crs_dep={has_dep_sched})")
-        sql = TEMPORAL_PROPAGATION_SQL.format(
-            src=src,
-            window=PROPAGATION_WINDOW_MINUTES,
-            threshold=PROPAGATION_DELAY_THRESHOLD,
-        )
-        method = "temporal"
+    print("[04] Using temporal correlation propagation...")
+    sql = TEMPORAL_PROPAGATION_SQL.format(
+        src=str(CLEANED_PARQUET),
+        window=PROPAGATION_WINDOW_MINUTES,
+        threshold=PROPAGATION_DELAY_THRESHOLD,
+    )
 
     copy_sql = f"""
-    COPY (
-        {sql}
-    )
+    COPY ({sql})
     TO '{PROPAGATION_PARQUET}'
     (FORMAT PARQUET, COMPRESSION 'zstd')
     """
-
     con.execute(copy_sql)
 
     count = con.execute(
         f"SELECT COUNT(*) FROM read_parquet('{PROPAGATION_PARQUET}')"
     ).fetchone()[0]
-    print(f"[04]   {count:,} propagation events written ({method})")
+    print(f"[04] Done. {count} rows written to {PROPAGATION_PARQUET.name}")
 
     # Write summary
-    summary_path = PROCESSED_DIR / "propagation_summary.parquet"
-    con.execute(f"""
+    summary_sql = f"""
     COPY (
         {PROPAGATION_SUMMARY_SQL.format(prop=PROPAGATION_PARQUET)}
     )
-    TO '{summary_path}'
+    TO '{PROPAGATION_SUMMARY_PARQUET}'
     (FORMAT PARQUET, COMPRESSION 'zstd')
-    """)
+    """
+    con.execute(summary_sql)
+
     summary_count = con.execute(
-        f"SELECT COUNT(*) FROM read_parquet('{summary_path}')"
+        f"SELECT COUNT(*) FROM read_parquet('{PROPAGATION_SUMMARY_PARQUET}')"
     ).fetchone()[0]
-    print(f"[04]   {summary_count:,} propagation summary rows → propagation_summary.parquet")
+    print(f"[04] Done. {summary_count} rows written to {PROPAGATION_SUMMARY_PARQUET.name}")
 
     con.close()
     print("[04] Propagation phase complete.")

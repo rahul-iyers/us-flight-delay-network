@@ -1,9 +1,4 @@
-"""
-Static lookup table of US commercial airport coordinates.
-Source: BTS / FAA public data, ~500 airports with scheduled service.
-Used to add lat/lon to the aggregated airport stats parquet.
-"""
-
+# Airport info lookup table
 # IATA_CODE -> (lat, lon, full_name, city, state)
 AIRPORTS: dict[str, tuple[float, float, str, str, str]] = {
     "ATL": (33.6367, -84.4281, "Hartsfield-Jackson Atlanta International", "Atlanta", "GA"),
@@ -293,11 +288,3 @@ AIRPORTS: dict[str, tuple[float, float, str, str, str]] = {
     "PPG": (-14.3310, -170.7105, "Pago Pago International Airport", "Pago Pago", "AS"),
 }
 
-
-def get_airport_info(iata: str) -> dict | None:
-    """Return airport metadata dict or None if not found."""
-    data = AIRPORTS.get(iata.upper())
-    if data is None:
-        return None
-    lat, lon, name, city, state = data
-    return {"code": iata.upper(), "lat": lat, "lon": lon, "name": name, "city": city, "state": state}
