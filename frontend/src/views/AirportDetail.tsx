@@ -23,15 +23,15 @@ function delayColor(avg: number): string {
 }
 
 function pct(v: number | undefined | null, digits = 1): string {
-  if (v == null) return '—'
+  if (v == null) return '-'
   return (v * 100).toFixed(digits) + '%'
 }
 function min(v: number | undefined | null): string {
-  if (v == null) return '—'
+  if (v == null) return '-'
   return v.toFixed(1) + ' min'
 }
 function fmt(v: number | undefined | null): string {
-  if (v == null) return '—'
+  if (v == null) return '-'
   return v.toLocaleString()
 }
 
@@ -166,7 +166,7 @@ export default function AirportDetail({ code, onBack }: Props) {
   if (apLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#8b949e' }}>
-        Loading…
+        Loading...
       </div>
     )
   }

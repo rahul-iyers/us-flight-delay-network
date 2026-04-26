@@ -20,7 +20,7 @@ GRAPH_JSON = PROCESSED_DIR / "graph.json"
 
 # Delay propagation parameters
 PROPAGATION_WINDOW_MINUTES = 90   # max turnaround window to infer propagation
-PROPAGATION_DELAY_THRESHOLD = 15  # minutes — both flights must exceed this
+PROPAGATION_DELAY_THRESHOLD = 15  # minutes - both flights must exceed this
 
 # Standardize csv column names
 COLUMN_MAP = {

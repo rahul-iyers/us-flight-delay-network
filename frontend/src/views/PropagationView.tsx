@@ -463,7 +463,7 @@ export default function PropagationView() {
             {([
               ['Airports',      treeData.node_count],
               ['Total events',  fmtCount(totalProp)],
-              ['Max delay',     maxDelay > 0 ? `${maxDelay.toFixed(1)} min` : '—'],
+              ['Max delay',     maxDelay > 0 ? `${maxDelay.toFixed(1)} min` : '-'],
             ] as [string, string | number][]).map(([l, v]) => (
               <div key={String(l)} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, color: '#6e7681' }}>
                 <span>{l}</span>
@@ -483,7 +483,7 @@ export default function PropagationView() {
           display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0,
         }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f6fc' }}>
-            Delay Propagation — {rootAirport}
+            Delay Propagation - {rootAirport}
           </div>
           {treeData && treeData.node_count > 1 && (
             <div style={{ fontSize: 11, color: '#6e7681' }}>

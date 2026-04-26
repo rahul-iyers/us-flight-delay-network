@@ -203,7 +203,7 @@ export default function Sidebar({
         ))}
       </div>
 
-      <div style={s.footer}>CSE 6242 · Team 21</div>
+      <div style={s.footer}>CSE 6242 : Team 21</div>
     </nav>
   )
 }

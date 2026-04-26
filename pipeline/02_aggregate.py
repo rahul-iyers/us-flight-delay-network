@@ -21,7 +21,7 @@ def main():
 
     print(f"[02] Reading {CLEANED_PARQUET.name}...")
 
-    print("[02] Building airport_stats…")
+    print("[02] Building airport_stats...")
     airport_sql = f"""
     SELECT
         origin                                      AS airport_code,
@@ -74,7 +74,7 @@ def main():
     print(f"[02] Added metadata for {df['lat'].notna().sum()} / {len(df)} airports")
 
 
-    print("[02] Building route_stats…")
+    print("[02] Building route_stats...")
 
     route_sql = f"""
     SELECT
@@ -95,7 +95,7 @@ def main():
     write_parquet(con, route_sql, ROUTE_STATS_PARQUET)
 
 
-    print("[02] Building hourly_delays…")
+    print("[02] Building hourly_delays...")
     hourly_sql = f"""
     SELECT
         origin                                                          AS airport_code,
@@ -116,7 +116,7 @@ def main():
     write_parquet(con, hourly_sql, HOURLY_DELAYS_PARQUET)
 
 
-    print("[02] Building airline_stats…")
+    print("[02] Building airline_stats...")
     airline_sql = f"""
     SELECT
         airline                                     AS airline_code,

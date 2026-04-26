@@ -122,7 +122,7 @@ def main():
     print(f"[03] Wrote {len(edges_df)} rows to {NETWORK_EDGES_PARQUET.name}")
 
     # Build graph.json for visualization
-    print("[03] Writing graph.json…")
+    print("[03] Writing graph.json...")
 
     # Only keep airports with coordinates for the map
     map_nodes = nodes_df[nodes_df["lat"].notna() & nodes_df["lon"].notna()]
